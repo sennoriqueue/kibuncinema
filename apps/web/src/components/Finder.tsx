@@ -12,6 +12,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
+import { HOME_EVENT } from "./HomeLink";
 import { MovieDialog } from "./MovieDialog";
 import { Ticket } from "./Ticket";
 
@@ -42,6 +43,21 @@ export function Finder() {
     };
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // 左上のロゴが押されたら、質問の最初に戻す
+  useEffect(() => {
+    const onHome = () => {
+      pushedUrl.current = false;
+      setOpenMovie(null);
+      setStep(0);
+      setAnswers({});
+      setResult(null);
+      setError(null);
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener(HOME_EVENT, onHome);
+    return () => window.removeEventListener(HOME_EVENT, onHome);
   }, []);
 
   function openDetail(movie: Movie) {
