@@ -1,11 +1,12 @@
-import type { Metadata } from "next";
-import { Dela_Gothic_One, Zen_Kaku_Gothic_New } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Shippori_Mincho_B1, Zen_Kaku_Gothic_New } from "next/font/google";
 import Link from "next/link";
 import { AuthButton } from "@/components/AuthButton";
 import "./globals.css";
 
-const display = Dela_Gothic_One({
-  weight: "400",
+// 見出しは映画のタイトルクレジットのような明朝体、本文は読みやすいゴシック体
+const display = Shippori_Mincho_B1({
+  weight: ["500", "700"],
   subsets: ["latin"],
   variable: "--font-display",
   preload: false,
@@ -22,19 +23,26 @@ export const metadata: Metadata = {
   description: "4つの質問に答えると、今の気分に合う映画を3本えらびます。",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#070a12",
+  colorScheme: "dark",
+};
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" className={`${display.variable} ${body.variable}`}>
       <body>
-        <header className="marquee">
-          <div className="bulbs" aria-hidden />
-          <div className="wrap marquee-inner">
+        <div className="sky" aria-hidden />
+        {/* 映写機の光。ページの上からスクリーンを照らす */}
+        <div className="projector" aria-hidden />
+        <header className="site-header">
+          <div className="wrap header-inner">
             <Link href="/" className="logo">
+              <span className="logo-mark" aria-hidden />
               キブンシネマ
             </Link>
             <AuthButton />
           </div>
-          <div className="bulbs bottom" aria-hidden />
         </header>
         <main className="wrap main">{children}</main>
         <footer className="footer">
