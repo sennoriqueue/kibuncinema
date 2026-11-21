@@ -203,12 +203,17 @@ function ProviderGroup({
   title: string;
   fallback: string | null;
 }) {
-  if (providers.length === 0) return null;
+  // 「Amazon Prime Video」と「Amazon Prime Video with Ads」のように、
+  // 表示名が同じになるものは1つにまとめる
+  const unique = providers.filter(
+    (p, i) => providers.findIndex((q) => providerLabel(q.name) === providerLabel(p.name)) === i,
+  );
+  if (unique.length === 0) return null;
   return (
     <div className="provider-group">
       <span className="provider-group-label">{label}</span>
       <div className="provider-list">
-        {providers.map((p) => {
+        {unique.map((p) => {
           const name = providerLabel(p.name);
           const search = providerSearchUrl(p.name, title);
           const href = search ?? fallback ?? undefined;

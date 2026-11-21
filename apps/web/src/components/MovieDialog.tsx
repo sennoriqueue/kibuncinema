@@ -1,13 +1,18 @@
 "use client";
 
 import { type ComponentProps, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { MovieDetail } from "./MovieDetail";
 
 type Props = Omit<ComponentProps<typeof MovieDetail>, "onClose" | "titleId"> & {
   onClose: () => void;
 };
 
-/** 映画の詳細を、今の画面の上に重ねて開く */
+/**
+ * 映画の詳細を、今の画面の上に重ねて開く。
+ * body の直下に描く（portal）。親に backdrop-filter などがあると position: fixed が
+ * 画面ではなくその親を基準にしてしまい、ダイアログがはみ出すため。
+ */
 export function MovieDialog({ onClose, ...detail }: Props) {
   const panel = useRef<HTMLDivElement>(null);
 
@@ -29,7 +34,7 @@ export function MovieDialog({ onClose, ...detail }: Props) {
 
   const titleId = `movie-title-${detail.movieId}`;
 
-  return (
+  return createPortal(
     <div
       className="overlay"
       onClick={(e) => {
@@ -46,6 +51,7 @@ export function MovieDialog({ onClose, ...detail }: Props) {
       >
         <MovieDetail {...detail} titleId={titleId} onClose={onClose} />
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
