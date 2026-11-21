@@ -6,6 +6,7 @@ import { sessionMiddleware } from "./lib/session";
 import { favoritesRoute } from "./routes/favorites";
 import { historyRoute } from "./routes/history";
 import { imagesRoute, meRoute } from "./routes/me";
+import { moviesRoute } from "./routes/movies";
 import { recommendRoute } from "./routes/recommend";
 
 const app = new Hono<AppEnv>().basePath("/api");
@@ -17,6 +18,7 @@ const routes = app
   .use("*", sessionMiddleware)
   .get("/health", (c) => c.json({ ok: true }))
   .route("/recommend", recommendRoute)
+  .route("/movies", moviesRoute)
   .route("/favorites", favoritesRoute)
   .route("/history", historyRoute)
   .route("/me", meRoute)

@@ -9,9 +9,11 @@ import {
   type RecommendResponse,
   labelOf,
 } from "@kibuncinema/shared";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/auth-client";
+import { HOME_EVENT } from "./HomeLink";
+import { MovieDialog } from "./MovieDialog";
 import { Ticket } from "./Ticket";
 
 const PER_PAGE = 3;
@@ -27,6 +29,51 @@ export function Finder() {
   const { data: session } = useSession();
   const loggedIn = Boolean(session);
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
+
+  // 詳細を開いている映画。開いている間は URL を /movie/:id にする（共有・戻るボタン用）
+  const [openMovie, setOpenMovie] = useState<Movie | null>(null);
+  const pushedUrl = useRef(false);
+
+  useEffect(() => {
+    const onPop = () => {
+      if (!window.location.pathname.startsWith("/movie/")) {
+        pushedUrl.current = false;
+        setOpenMovie(null);
+      }
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
+
+  // 左上のロゴが押されたら、質問の最初に戻す
+  useEffect(() => {
+    const onHome = () => {
+      pushedUrl.current = false;
+      setOpenMovie(null);
+      setStep(0);
+      setAnswers({});
+      setResult(null);
+      setError(null);
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener(HOME_EVENT, onHome);
+    return () => window.removeEventListener(HOME_EVENT, onHome);
+  }, []);
+
+  function openDetail(movie: Movie) {
+    setOpenMovie(movie);
+    window.history.pushState(null, "", `/movie/${movie.id}`);
+    pushedUrl.current = true;
+  }
+
+  const closeDetail = useCallback(() => {
+    if (pushedUrl.current) {
+      // 開いたときに URL を変えたので、ブラウザの「戻る」と同じ動きで閉じる
+      window.history.back();
+    } else {
+      setOpenMovie(null);
+    }
+  }, []);
 
   useEffect(() => {
     if (!loggedIn) {
@@ -73,7 +120,7 @@ export function Finder() {
     setError(null);
   }
 
-  async function toggleFavorite(movie: Movie) {
+  async function toggleFavorite(movie: { id: number; title: string; posterPath: string | null }) {
     const has = favorites.has(movie.id);
     const next = new Set(favorites);
     if (has) next.delete(movie.id);
@@ -175,6 +222,7 @@ export function Finder() {
             <Ticket
               key={m.id}
               movie={m}
+              onOpen={() => openDetail(m)}
               favorite={loggedIn ? favorites.has(m.id) : undefined}
               onToggleFavorite={loggedIn ? () => toggleFavorite(m) : undefined}
             />
@@ -183,6 +231,17 @@ export function Finder() {
       )}
       {!loggedIn && result && (
         <p className="note">ログインすると、お気に入りと提案の履歴を残せます。</p>
+      )}
+
+      {openMovie && (
+        <MovieDialog
+          movieId={openMovie.id}
+          preview={openMovie}
+          moodLabel={all.mood ? labelOf("mood", all.mood) : undefined}
+          favorite={loggedIn ? favorites.has(openMovie.id) : undefined}
+          onToggleFavorite={loggedIn ? toggleFavorite : undefined}
+          onClose={closeDetail}
+        />
       )}
 
       <div className="foot">

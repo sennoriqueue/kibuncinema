@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Shippori_Mincho_B1, Zen_Kaku_Gothic_New } from "next/font/google";
-import Link from "next/link";
 import { AuthButton } from "@/components/AuthButton";
+import { HomeLink } from "@/components/HomeLink";
+import { Maker } from "@/components/Maker";
 import "./globals.css";
 
 // 見出しは映画のタイトルクレジットのような明朝体、本文は読みやすいゴシック体
@@ -37,14 +38,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="projector" aria-hidden />
         <header className="site-header">
           <div className="wrap header-inner">
-            <Link href="/" className="logo">
+            <HomeLink className="logo">
               <span className="logo-mark" aria-hidden />
               キブンシネマ
-            </Link>
+            </HomeLink>
             <AuthButton />
           </div>
         </header>
         <main className="wrap main">{children}</main>
+        <Maker />
         <footer className="footer">
           <div className="wrap">
             This product uses the TMDB API but is not endorsed or certified by TMDB.
