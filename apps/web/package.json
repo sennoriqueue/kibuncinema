@@ -1,0 +1,28 @@
+{
+  "name": "@kibuncinema/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@kibuncinema/shared": "workspace:*",
+    "@opennextjs/cloudflare": "^1.13.0",
+    "better-auth": "^1.3.34",
+    "next": "^15.5.6",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "@types/react": "^19.2.6",
+    "@types/react-dom": "^19.2.3",
+    "typescript": "^5.9.3",
+    "wrangler": "^4.50.0"
+  }
+}
