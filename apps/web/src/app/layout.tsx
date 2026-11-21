@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Shippori_Mincho_B1, Zen_Kaku_Gothic_New } from "next/font/google";
+import { Astronaut } from "@/components/art/Astronaut";
+import { DriveIn } from "@/components/art/DriveIn";
 import { AuthButton } from "@/components/AuthButton";
 import { HomeLink } from "@/components/HomeLink";
 import { Maker } from "@/components/Maker";
@@ -45,15 +47,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AuthButton />
           </div>
         </header>
+        <Astronaut />
         <main className="wrap main">{children}</main>
         <Maker />
+        <DriveIn />
         <footer className="footer">
           <div className="wrap">
-            This product uses the TMDB API but is not endorsed or certified by TMDB.
-            映画データ提供：
-            <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">
-              The Movie Database（TMDB）
-            </a>
+            <small className="copyright">© 2026 キブンシネマ / 千利休</small>
+            <span className="tmdb-credit">
+              This product uses the TMDB API but is not endorsed or certified by TMDB.
+              映画データ提供：
+              <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">
+                The Movie Database（TMDB）
+              </a>
+            </span>
           </div>
         </footer>
       </body>
