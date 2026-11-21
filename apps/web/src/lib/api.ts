@@ -4,6 +4,7 @@ import type {
   FavoriteInput,
   FavoriteItem,
   HistoryItem,
+  MovieDetail,
   RecommendResponse,
 } from "@kibuncinema/shared";
 
@@ -39,6 +40,8 @@ const json = (body: unknown): Init => ({
 export const api = {
   recommend: (answers: Answers) =>
     request<RecommendResponse>("/recommend", { method: "POST", ...json(answers) }),
+
+  movie: (id: number) => request<MovieDetail>(`/movies/${id}`),
 
   favorites: () => request<{ items: FavoriteItem[] }>("/favorites"),
   addFavorite: (input: FavoriteInput) =>

@@ -3,12 +3,14 @@ import { Poster } from "./Poster";
 
 type Props = {
   movie: Movie;
+  /** ポスターかタイトルを押したとき（詳細を開く） */
+  onOpen: () => void;
   /** undefined のときはお気に入りボタンを出さない（未ログイン） */
   favorite?: boolean;
   onToggleFavorite?: () => void;
 };
 
-export function Ticket({ movie, favorite, onToggleFavorite }: Props) {
+export function Ticket({ movie, onOpen, favorite, onToggleFavorite }: Props) {
   const genres = movie.genreIds
     .slice(0, 2)
     .map((g) => GENRES[g])
@@ -17,11 +19,15 @@ export function Ticket({ movie, favorite, onToggleFavorite }: Props) {
 
   return (
     <article className="tk">
-      <div className="poster">
+      <button type="button" className="poster poster-btn" onClick={onOpen} aria-label={`${movie.title}の詳細を見る`}>
         <Poster title={movie.title} year={movie.year} genreIds={movie.genreIds} path={movie.posterPath} />
-      </div>
+      </button>
       <div className="stub">
-        <h2>{movie.title}</h2>
+        <h2>
+          <button type="button" className="title-btn" onClick={onOpen}>
+            {movie.title}
+          </button>
+        </h2>
         <div className="meta">
           <span className="star">★ {movie.rating.toFixed(1)}</span>
           <span>{movie.year || "年不明"}</span>
@@ -29,13 +35,9 @@ export function Ticket({ movie, favorite, onToggleFavorite }: Props) {
         </div>
         <p className="ov">{movie.overview || "あらすじは登録されていません。"}</p>
         <div className="stub-foot">
-          <a
-            href={`https://www.themoviedb.org/movie/${movie.id}?language=ja-JP`}
-            target="_blank"
-            rel="noopener"
-          >
-            TMDBで詳しく見る →
-          </a>
+          <button type="button" className="more-btn" onClick={onOpen}>
+            詳細・配信を見る →
+          </button>
           {onToggleFavorite && (
             <button
               type="button"

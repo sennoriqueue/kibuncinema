@@ -35,6 +35,7 @@ TMDB のトークンは API の Worker のシークレットにだけ置き、�
 |---|---|---|---|
 | GET/POST | `/api/auth/*` | Better Auth（ログイン、ログアウト、コールバック） | - |
 | POST | `/api/recommend` | 質問の答えから映画を探す。ログイン中なら履歴に残す | 任意 |
+| GET | `/api/movies/:id` | 映画の詳細と、日本で観られる配信サービス（JustWatch 提供） | - |
 | GET | `/api/favorites` | お気に入りの一覧 | 必須 |
 | POST | `/api/favorites` | お気に入りに追加 | 必須 |
 | DELETE | `/api/favorites/:tmdbId` | お気に入りから外す | 必須 |
@@ -113,6 +114,8 @@ http://localhost:3000 を開きます。
 - Cloudflare のドキュメントでは、新しい Next.js アプリには OpenNext ではなく vinext が推奨されるようになっています。
   このリポジトリは OpenNext で組んでいます。移行する場合は `apps/web` の `next.config.ts`・`open-next.config.ts`・`wrangler.jsonc` が対象です
 - TMDB の利用規約に従い、画面の下に TMDB のクレジットを表示しています
+- 配信サービスのデータは JustWatch 提供のため、詳細画面にクレジットを表示しています（TMDB の条件）。
+  TMDB は作品ページへの直リンクを返さないので、各サービスの検索結果に飛ばしています（`apps/web/src/lib/watch-links.ts`）
 
 ---
 
