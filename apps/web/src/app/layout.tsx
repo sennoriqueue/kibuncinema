@@ -32,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja" className={`${display.variable} ${body.variable}`}>
       <body>
+        <div className="sky" aria-hidden />
         {/* 映写機の光。ページの上からスクリーンを照らす */}
         <div className="projector" aria-hidden />
         <header className="site-header">

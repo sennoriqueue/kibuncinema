@@ -1,5 +1,5 @@
 /*
-  夜の映画館。
+  夜の映画館。星空の下の野外シネマのイメージ。
   - 客席の暗さ：ほぼ黒の濃紺
   - スクリーンの光：上から差す白い光、ポスターが主役
   - 金色：館内の照明・座席番号のような差し色。大事なところだけに使う
@@ -41,8 +41,23 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .wrap { max-width: 1120px; margin: 0 auto; padding-inline: max(5vw, 20px); position: relative; }
 .main { padding-block: clamp(32px, 6vw, 72px) clamp(48px, 8vw, 96px); display: grid; gap: clamp(24px, 4vw, 40px); }
 
+/* ---------- 星空 ---------- */
+/* stars.svg を敷き詰める。天の川は斜めの淡い光の帯 */
+.sky {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("/stars.svg") 0 0 / 1400px 1000px repeat;
+}
+.sky::after {
+  content: ""; position: absolute; inset: -30%;
+  background: linear-gradient(118deg, transparent 33%, rgba(140, 150, 220, 0.06) 42%,
+    rgba(225, 215, 255, 0.11) 48%, rgba(255, 240, 220, 0.08) 52%, rgba(140, 150, 220, 0.05) 58%, transparent 67%);
+}
+.site-header, .main, .footer { position: relative; z-index: 1; }
+
 /* ---------- 映写機の光 ---------- */
 .projector {
+  z-index: 0;
+  opacity: 0.6;
   position: absolute;
   inset: 0 0 auto;
   height: 720px;
@@ -53,7 +68,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 
 /* ---------- ヘッダー ---------- */
-.site-header { position: relative; padding-block: 22px; border-bottom: 1px solid var(--line); }
+.site-header { padding-block: 22px; border-bottom: 1px solid rgba(52, 64, 94, 0.5); }
 .header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .logo {
   display: inline-flex; align-items: center; gap: 12px;
@@ -90,7 +105,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ---------- 質問（スクリーン） ---------- */
 .booth {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--bg-2) 100%);
+  /* 少し透けて、うしろの星空が見える */
+  background: linear-gradient(180deg, rgba(17, 24, 41, 0.78) 0%, rgba(13, 18, 32, 0.86) 100%);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: clamp(24px, 5vw, 56px);
