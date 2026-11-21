@@ -1,0 +1,29 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "kibuncinema-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+
+  // `wrangler d1 create kibuncinema` で表示された database_id に置き換える
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kibuncinema",
+      "database_id": "00000000-0000-0000-0000-000000000000",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // `wrangler r2 bucket create kibuncinema-assets` で作成する
+  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "kibuncinema-assets" }],
+
+  // 本番では Next.js 側の URL に変える（ログインのリダイレクト先にもなる）
+  "vars": {
+    "WEB_ORIGIN": "http://localhost:3000"
+  }
+
+  // シークレット（.dev.vars / `wrangler secret put`）:
+  //   TMDB_TOKEN, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+}

@@ -1,0 +1,12 @@
+# このファイルを .dev.vars にコピーして値を入れる（.dev.vars は git に入らない）
+
+# TMDB の「API 読み取りアクセストークン」（v4 形式の長いトークン）
+TMDB_TOKEN=
+
+# ランダムな長い文字列。例: openssl rand -base64 32
+BETTER_AUTH_SECRET=
+
+# Google Cloud Console で作る OAuth クライアント
+# 承認済みのリダイレクト URI: http://localhost:3000/api/auth/callback/google
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=

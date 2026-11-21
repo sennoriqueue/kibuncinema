@@ -1,0 +1,19 @@
+import type { AuthSession, AuthUser } from "./lib/auth";
+
+export type Bindings = {
+  DB: D1Database;
+  BUCKET: R2Bucket;
+  WEB_ORIGIN: string;
+  TMDB_TOKEN: string;
+  BETTER_AUTH_SECRET: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+};
+
+export type AppEnv = {
+  Bindings: Bindings;
+  Variables: {
+    user: AuthUser | null;
+    session: AuthSession | null;
+  };
+};
