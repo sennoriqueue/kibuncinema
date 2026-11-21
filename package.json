@@ -1,0 +1,17 @@
+{
+  "name": "kibuncinema",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --parallel --filter @kibuncinema/api --filter @kibuncinema/web dev",
+    "dev:api": "pnpm --filter @kibuncinema/api dev",
+    "dev:web": "pnpm --filter @kibuncinema/web dev",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate:local": "pnpm --filter @kibuncinema/api db:migrate:local",
+    "db:migrate:remote": "pnpm --filter @kibuncinema/api db:migrate:remote",
+    "deploy": "pnpm --filter @kibuncinema/api deploy && pnpm --filter @kibuncinema/web deploy"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
