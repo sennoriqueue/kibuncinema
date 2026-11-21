@@ -1,4 +1,4 @@
-/** 全ページの下に出す「このサイトをつくった人」 */
+/** 全ページの下に出す、この映画館（サイト）の支配人の紹介 */
 export function Maker() {
   return (
     <section className="maker" aria-labelledby="maker-name">
@@ -6,7 +6,7 @@ export function Maker() {
         <div className="maker-card">
           <img className="maker-icon" src="/maker.jpg" alt="" width={72} height={72} />
           <div>
-            <p className="maker-label">このサイトをつくった人</p>
+            <p className="maker-label">支配人</p>
             <h2 className="maker-name" id="maker-name">
               千利休
             </h2>

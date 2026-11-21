@@ -320,7 +320,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .overlay, .dialog { animation: none; }
 }
 
-/* ---------- このサイトをつくった人 ---------- */
+/* ---------- 支配人（開発者）の紹介 ---------- */
 .maker { border-top: 1px solid rgba(52, 64, 94, 0.5); padding-block: 40px; }
 .maker-card {
   display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 20px; align-items: center;
