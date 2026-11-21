@@ -1,16 +1,17 @@
+"use client";
+
 import { GENRES, type Movie } from "@kibuncinema/shared";
+import { toggleFavorite, useIsFavorite } from "@/lib/local-store";
 import { Poster } from "./Poster";
 
 type Props = {
   movie: Movie;
   /** ポスターかタイトルを押したとき（詳細を開く） */
   onOpen: () => void;
-  /** undefined のときはお気に入りボタンを出さない（未ログイン） */
-  favorite?: boolean;
-  onToggleFavorite?: () => void;
 };
 
-export function Ticket({ movie, onOpen, favorite, onToggleFavorite }: Props) {
+export function Ticket({ movie, onOpen }: Props) {
+  const favorite = useIsFavorite(movie.id);
   const genres = movie.genreIds
     .slice(0, 2)
     .map((g) => GENRES[g])
@@ -38,16 +39,14 @@ export function Ticket({ movie, onOpen, favorite, onToggleFavorite }: Props) {
           <button type="button" className="more-btn" onClick={onOpen}>
             詳細・配信を見る →
           </button>
-          {onToggleFavorite && (
-            <button
-              type="button"
-              className={`fav${favorite ? " on" : ""}`}
-              aria-pressed={favorite}
-              onClick={onToggleFavorite}
-            >
-              {favorite ? "♥ お気に入り" : "♡ お気に入り"}
-            </button>
-          )}
+          <button
+            type="button"
+            className={`fav${favorite ? " on" : ""}`}
+            aria-pressed={favorite}
+            onClick={() => toggleFavorite(movie)}
+          >
+            {favorite ? "♥ お気に入り" : "♡ お気に入り"}
+          </button>
         </div>
       </div>
     </article>

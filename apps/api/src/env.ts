@@ -5,9 +5,10 @@ export type Bindings = {
   BUCKET: R2Bucket;
   WEB_ORIGIN: string;
   TMDB_TOKEN: string;
-  BETTER_AUTH_SECRET: string;
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
+  // ログイン機能を使うときだけ必要（今は止めているので未設定でよい）
+  BETTER_AUTH_SECRET?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
 };
 
 export type AppEnv = {

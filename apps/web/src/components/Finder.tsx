@@ -11,7 +11,6 @@ import {
 } from "@kibuncinema/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
-import { useSession } from "@/lib/auth-client";
 import { HOME_EVENT } from "./HomeLink";
 import { MovieDialog } from "./MovieDialog";
 import { Ticket } from "./Ticket";
@@ -26,9 +25,6 @@ export function Finder() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { data: session } = useSession();
-  const loggedIn = Boolean(session);
-  const [favorites, setFavorites] = useState<Set<number>>(new Set());
 
   // 詳細を開いている映画。開いている間は URL を /movie/:id にする（共有・戻るボタン用）
   const [openMovie, setOpenMovie] = useState<Movie | null>(null);
@@ -75,17 +71,6 @@ export function Finder() {
     }
   }, []);
 
-  useEffect(() => {
-    if (!loggedIn) {
-      setFavorites(new Set());
-      return;
-    }
-    api
-      .favorites()
-      .then(({ items }) => setFavorites(new Set(items.map((f) => f.tmdbId))))
-      .catch(() => {});
-  }, [loggedIn]);
-
   async function find(all: Answers) {
     setLoading(true);
     setError(null);
@@ -118,25 +103,6 @@ export function Finder() {
     setAnswers({});
     setResult(null);
     setError(null);
-  }
-
-  async function toggleFavorite(movie: { id: number; title: string; posterPath: string | null }) {
-    const has = favorites.has(movie.id);
-    const next = new Set(favorites);
-    if (has) next.delete(movie.id);
-    else next.add(movie.id);
-    setFavorites(next); // 先に画面を変えて、失敗したら戻す
-    try {
-      if (has) await api.removeFavorite(movie.id);
-      else
-        await api.addFavorite({
-          tmdbId: movie.id,
-          title: movie.title,
-          posterPath: movie.posterPath,
-        });
-    } catch {
-      setFavorites(favorites);
-    }
   }
 
   /* ---------- 質問 ---------- */
@@ -223,14 +189,9 @@ export function Finder() {
               key={m.id}
               movie={m}
               onOpen={() => openDetail(m)}
-              favorite={loggedIn ? favorites.has(m.id) : undefined}
-              onToggleFavorite={loggedIn ? () => toggleFavorite(m) : undefined}
             />
           ))}
         </div>
-      )}
-      {!loggedIn && result && (
-        <p className="note">ログインすると、お気に入りと提案の履歴を残せます。</p>
       )}
 
       {openMovie && (
@@ -238,8 +199,6 @@ export function Finder() {
           movieId={openMovie.id}
           preview={openMovie}
           moodLabel={all.mood ? labelOf("mood", all.mood) : undefined}
-          favorite={loggedIn ? favorites.has(openMovie.id) : undefined}
-          onToggleFavorite={loggedIn ? toggleFavorite : undefined}
           onClose={closeDetail}
         />
       )}

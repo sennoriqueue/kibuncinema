@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { HTTPException } from "hono/http-exception";
 import type { AppEnv } from "./env";
-import { createAuth } from "./lib/auth";
+import { authEnabled, createAuth } from "./lib/auth";
 import { sessionMiddleware } from "./lib/session";
 import { favoritesRoute } from "./routes/favorites";
 import { historyRoute } from "./routes/history";
@@ -12,7 +12,11 @@ import { recommendRoute } from "./routes/recommend";
 const app = new Hono<AppEnv>().basePath("/api");
 
 // Better Auth（ログイン・ログアウト・Google のコールバックなど）
-app.on(["GET", "POST"], "/auth/*", (c) => createAuth(c.env).handler(c.req.raw));
+// ログイン機能を止めているとき（シークレット未設定）は 404 を返す
+app.on(["GET", "POST"], "/auth/*", (c) => {
+  if (!authEnabled(c.env)) return c.json({ error: "ログイン機能は停止中です" }, 404);
+  return createAuth(c.env).handler(c.req.raw);
+});
 
 const routes = app
   .use("*", sessionMiddleware)

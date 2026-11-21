@@ -1,116 +1,48 @@
 "use client";
 
-import { type FavoriteItem, type HistoryItem, QUESTIONS, type QuestionId, labelOf } from "@kibuncinema/shared";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { MovieDialog } from "@/components/MovieDialog";
 import { Poster } from "@/components/Poster";
-import { api } from "@/lib/api";
-import { signIn, useSession } from "@/lib/auth-client";
+import { type SavedMovie, clearRecent, removeFavorite, useMyList } from "@/lib/local-store";
 
-const dateFormat = new Intl.DateTimeFormat("ja-JP", { dateStyle: "medium", timeStyle: "short" });
+const dateFormat = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric" });
 
-export default function MyPage() {
-  const { data: session, isPending } = useSession();
-  const [favorites, setFavorites] = useState<FavoriteItem[] | null>(null);
-  const [history, setHistory] = useState<HistoryItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  // セッションは数分キャッシュされるので、変えたアイコンはここで先に反映する
-  const [avatar, setAvatar] = useState<string | null>(null);
+/** 「今日」「昨日」、それより前は「11月18日」 */
+function viewedLabel(time: number) {
+  const day = (t: number) => new Date(t).toDateString();
+  if (day(time) === day(Date.now())) return "今日";
+  if (day(time) === day(Date.now() - 24 * 60 * 60 * 1000)) return "昨日";
+  return dateFormat.format(time);
+}
 
-  useEffect(() => {
-    if (!session) return;
-    Promise.all([api.favorites(), api.history()])
-      .then(([f, h]) => {
-        setFavorites(f.items);
-        setHistory(h.items);
-      })
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : "読み込めませんでした"));
-  }, [session]);
-
-  async function remove(tmdbId: number) {
-    const before = favorites;
-    setFavorites((list) => list?.filter((f) => f.tmdbId !== tmdbId) ?? null);
-    try {
-      await api.removeFavorite(tmdbId);
-    } catch {
-      setFavorites(before);
-    }
-  }
-
-  async function onAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    setError(null);
-    try {
-      const { image } = await api.uploadAvatar(file);
-      setAvatar(image);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "アップロードできませんでした");
-    } finally {
-      setUploading(false);
-      e.target.value = "";
-    }
-  }
-
-  if (isPending) return <div className="spin"><i />読み込み中…</div>;
-
-  if (!session) {
-    return (
-      <section className="booth">
-        <h1 className="q">マイページ</h1>
-        <p>お気に入りと提案の履歴を見るには、ログインしてください。</p>
-        <button
-          type="button"
-          className="btn"
-          onClick={() => signIn.social({ provider: "google", callbackURL: "/mypage" })}
-        >
-          Googleでログイン
-        </button>
-      </section>
-    );
-  }
-
-  const { user } = session;
-  const image = avatar ?? user.image;
+/** マイリスト：このブラウザに保存したお気に入りと、最近詳細を開いた映画 */
+export default function MyListPage() {
+  const { favorites, recent } = useMyList();
+  const [open, setOpen] = useState<SavedMovie | null>(null);
 
   return (
-    <div className="mypage">
-      <section className="booth profile">
-        <div className="avatar-lg">
-          {image ? <img src={image} alt="" /> : <span>{user.name.slice(0, 1)}</span>}
-        </div>
-        <div>
-          <h1 className="q">{user.name}さんのマイページ</h1>
-          <label className="btn alt file">
-            {uploading ? "アップロード中…" : "アイコンを変える"}
-            <input type="file" accept="image/png,image/jpeg,image/webp" onChange={onAvatar} disabled={uploading} />
-          </label>
-        </div>
-      </section>
-
-      {error && <p className="note">{error}</p>}
+    <div className="mylist">
+      <div className="mylist-head">
+        <h1 className="q">マイリスト</h1>
+        <p className="mylist-note">このブラウザだけに保存されています</p>
+      </div>
 
       <section className="booth">
-        <h2 className="h2">お気に入り</h2>
-        {favorites === null ? (
-          <div className="spin"><i />読み込み中…</div>
-        ) : favorites.length === 0 ? (
+        <div className="mylist-sec">
+          <h2 className="h2">お気に入り</h2>
+          {favorites.length > 0 && <span className="note">{favorites.length}本</span>}
+        </div>
+        {favorites.length === 0 ? (
           <p className="note">
-            まだありません。<Link href="/">映画をさがす</Link>と、結果からお気に入りに追加できます。
+            まだありません。<Link href="/">映画をさがす</Link>と、結果や詳細の「♡ お気に入り」で追加できます。
           </p>
         ) : (
-          <ul className="fav-grid">
-            {favorites.map((f) => (
-              <li key={f.tmdbId}>
-                <a href={`https://www.themoviedb.org/movie/${f.tmdbId}?language=ja-JP`} target="_blank" rel="noopener">
-                  <div className="poster">
-                    <Poster title={f.title} path={f.posterPath} size="w185" />
-                  </div>
-                  <span>{f.title}</span>
-                </a>
-                <button type="button" className="link-btn" onClick={() => remove(f.tmdbId)}>
+          <ul className="mylist-grid">
+            {favorites.map((m) => (
+              <li key={m.id}>
+                <MiniPoster movie={m} onOpen={() => setOpen(m)} />
+                <button type="button" className="link-btn mylist-small" onClick={() => removeFavorite(m.id)}>
                   外す
                 </button>
               </li>
@@ -120,29 +52,45 @@ export default function MyPage() {
       </section>
 
       <section className="booth">
-        <h2 className="h2">最近の提案</h2>
-        {history === null ? (
-          <div className="spin"><i />読み込み中…</div>
-        ) : history.length === 0 ? (
-          <p className="note">まだありません。</p>
-        ) : (
-          <ol className="history">
-            {history.map((h) => (
-              <li key={h.id}>
-                <div className="history-head">
-                  <time dateTime={h.createdAt}>{dateFormat.format(new Date(h.createdAt))}</time>
-                  <ul className="chips">
-                    {QUESTIONS.map((q) => (
-                      <li key={q.id}>{labelOf(q.id as QuestionId, h.answers[q.id as QuestionId])}</li>
-                    ))}
-                  </ul>
-                </div>
-                <p>{h.movies.map((m) => m.title).join("／")}</p>
+        <div className="mylist-sec">
+          <h2 className="h2">最近見た映画</h2>
+          {recent.length > 0 && (
+            <button type="button" className="link-btn mylist-small" onClick={clearRecent}>
+              履歴を消す
+            </button>
+          )}
+        </div>
+        <p className="note">詳細を開いた映画です。30日たつと自動で消えます。</p>
+        {recent.length > 0 && (
+          <ul className="mylist-grid small">
+            {recent.map((m) => (
+              <li key={m.id}>
+                <MiniPoster movie={m} onOpen={() => setOpen(m)} />
+                <time dateTime={new Date(m.viewedAt).toISOString()}>{viewedLabel(m.viewedAt)}</time>
               </li>
             ))}
-          </ol>
+          </ul>
         )}
       </section>
+
+      {open && (
+        <MovieDialog
+          movieId={open.id}
+          preview={{ title: open.title, posterPath: open.posterPath, year: open.year, genreIds: open.genreIds }}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </div>
+  );
+}
+
+function MiniPoster({ movie, onOpen }: { movie: SavedMovie; onOpen: () => void }) {
+  return (
+    <button type="button" className="mylist-item" onClick={onOpen}>
+      <span className="poster">
+        <Poster title={movie.title} year={movie.year} genreIds={movie.genreIds} path={movie.posterPath} size="w185" />
+      </span>
+      <span>{movie.title}</span>
+    </button>
   );
 }

@@ -25,5 +25,6 @@
   }
 
   // シークレット（.dev.vars / `wrangler secret put`）:
-  //   TMDB_TOKEN, BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+  //   TMDB_TOKEN（必須）
+  //   BETTER_AUTH_SECRET, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET（ログイン機能を使うときだけ）
 }

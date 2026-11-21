@@ -10,6 +10,11 @@ import type { Bindings } from "../env";
  * 画面（Next.js）が /api/* をこの Worker に中継するので、
  * ブラウザから見ると認証も同じドメインになる。baseURL は画面側の URL。
  */
+/** ログイン機能に必要なシークレットがそろっているか。そろっていなければログインは止まった状態で動く */
+export function authEnabled(env: Bindings): boolean {
+  return Boolean(env.BETTER_AUTH_SECRET && env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+}
+
 export function createAuth(env: Bindings) {
   return betterAuth({
     baseURL: env.WEB_ORIGIN,
@@ -27,8 +32,8 @@ export function createAuth(env: Bindings) {
     }),
     socialProviders: {
       google: {
-        clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
+        clientId: env.GOOGLE_CLIENT_ID ?? "",
+        clientSecret: env.GOOGLE_CLIENT_SECRET ?? "",
       },
     },
     session: {

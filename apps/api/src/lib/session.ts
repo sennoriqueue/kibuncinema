@@ -1,9 +1,16 @@
 import { createMiddleware } from "hono/factory";
 import type { AppEnv } from "../env";
-import { createAuth } from "./auth";
+import { authEnabled, createAuth } from "./auth";
 
 /** ログインしていれば c.var.user に入れる。していなくても先へ進む */
 export const sessionMiddleware = createMiddleware<AppEnv>(async (c, next) => {
+  if (!authEnabled(c.env)) {
+    // ログイン機能を止めているときは、だれもログインしていない扱い
+    c.set("user", null);
+    c.set("session", null);
+    await next();
+    return;
+  }
   const result = await createAuth(c.env).api.getSession({ headers: c.req.raw.headers });
   c.set("user", result?.user ?? null);
   c.set("session", result?.session ?? null);
