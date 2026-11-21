@@ -9,7 +9,7 @@
     "typecheck": "pnpm -r typecheck",
     "db:migrate:local": "pnpm --filter @kibuncinema/api db:migrate:local",
     "db:migrate:remote": "pnpm --filter @kibuncinema/api db:migrate:remote",
-    "deploy": "pnpm --filter @kibuncinema/api deploy && pnpm --filter @kibuncinema/web deploy"
+    "deploy": "pnpm --filter @kibuncinema/api run deploy && pnpm --filter @kibuncinema/web run deploy"
   },
   "devDependencies": {
     "typescript": "^5.9.3"
