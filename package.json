@@ -2,6 +2,9 @@
   "name": "kibuncinema",
   "private": true,
   "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "pnpm --parallel --filter @kibuncinema/api --filter @kibuncinema/web dev",
     "dev:api": "pnpm --filter @kibuncinema/api dev",

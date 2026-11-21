@@ -48,7 +48,7 @@ TMDB のトークンは API の Worker のシークレットにだけ置き、�
 
 ## はじめかた（ローカル）
 
-必要なもの：Node.js 20 以上、pnpm、Cloudflare のアカウント、TMDB のアカウント、Google Cloud のプロジェクト。
+必要なもの：Node.js 22.12 以上（wrangler の条件）、pnpm、Cloudflare のアカウント、TMDB のアカウント、Google Cloud のプロジェクト。
 
 ```sh
 pnpm install
