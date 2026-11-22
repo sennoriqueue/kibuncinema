@@ -25,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4 # バージョンは package.json の packageManager に従う
+      - uses: pnpm/action-setup@v6 # バージョンは package.json の packageManager に従う
 
       - uses: actions/setup-node@v4
         with:
