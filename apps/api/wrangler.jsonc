@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "kibuncinema",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "39d75ff4-ce4a-467c-83f9-1f4f4234c4f9",
       "migrations_dir": "migrations"
     }
   ],
