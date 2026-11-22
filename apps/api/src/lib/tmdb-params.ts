@@ -1,14 +1,46 @@
 import { type Answers, GENRE } from "@kibuncinema/shared";
 
-/** 気分 → 含めるジャンル（どれか1つ）と、除外するジャンル */
+/**
+ * 気分 → 含めるジャンル（どれか1つ）と、除外するジャンル。
+ * 除外は「その気分のときに出てきたらがっかりするもの」（笑いたいのにホラー、など）
+ */
 const MOOD_GENRES: Record<Answers["mood"], { include: number[]; exclude?: number[] }> = {
-  cry: { include: [GENRE.drama, GENRE.romance] },
-  thrill: { include: [GENRE.action, GENRE.adventure] },
-  laugh: { include: [GENRE.comedy] },
-  heal: { include: [GENRE.animation, GENRE.family], exclude: [GENRE.horror, GENRE.thriller] },
+  cry: { include: [GENRE.drama, GENRE.romance], exclude: [GENRE.horror] },
+  thrill: { include: [GENRE.action, GENRE.adventure], exclude: [GENRE.documentary] },
+  laugh: { include: [GENRE.comedy], exclude: [GENRE.horror, GENRE.war] },
+  heal: {
+    include: [GENRE.animation, GENRE.family],
+    exclude: [GENRE.horror, GENRE.thriller, GENRE.war, GENRE.crime],
+  },
   tense: { include: [GENRE.thriller, GENRE.horror] },
   think: { include: [GENRE.sf, GENRE.mystery] },
 };
+
+/**
+ * 誰と観るか → 上に出したいジャンルと、下に回したいジャンル。
+ * 検索条件で絞るとヒットが少なくなりすぎるので、検索結果を並べ替えるときに使う
+ */
+const WHO_PREFERENCES: Record<Answers["who"], { boost: number[]; avoid: number[] }> = {
+  solo: { boost: [], avoid: [] },
+  couple: { boost: [GENRE.romance, GENRE.comedy, GENRE.music, GENRE.drama], avoid: [GENRE.horror, GENRE.war] },
+  friends: { boost: [GENRE.comedy, GENRE.action, GENRE.adventure, GENRE.horror], avoid: [GENRE.documentary, GENRE.war] },
+  family: { boost: [GENRE.animation, GENRE.family, GENRE.adventure, GENRE.fantasy], avoid: [GENRE.romance, GENRE.crime] },
+};
+
+/**
+ * 並べ替え用の点数。誰と観るかに合うジャンルが多いほど高い。
+ * 評価の高さも少し足し、毎回同じ順にならないようにランダムな揺らぎも入れる
+ */
+export function scoreMovie(
+  movie: { genreIds: number[]; rating: number },
+  answers: Answers,
+  random: () => number = Math.random,
+): number {
+  const pref = WHO_PREFERENCES[answers.who];
+  const boost = movie.genreIds.filter((g) => pref.boost.includes(g)).length;
+  const avoid = movie.genreIds.filter((g) => pref.avoid.includes(g)).length;
+  return boost * 2 - avoid * 3 + movie.rating * 0.3 + random() * 2;
+}
 
 /**
  * 質問の答えを TMDB /discover/movie の検索条件に変換する。

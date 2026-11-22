@@ -12,7 +12,7 @@ export type Movie = {
 /* ---------- API のレスポンス（apps/api と apps/web で共有） ---------- */
 
 export type RecommendResponse = {
-  /** シャッフル済み。画面では先頭から3本ずつ見せる */
+  /** 合いそうな順（少しランダム）。画面では先頭から3本ずつ見せる */
   movies: Movie[];
   /** ぴったりの作品が少なく、時間・年代の条件を外して探し直したとき true */
   relaxed: boolean;

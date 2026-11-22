@@ -38,8 +38,9 @@ const json = (body: unknown): Init => ({
 });
 
 export const api = {
-  recommend: (answers: Answers) =>
-    request<RecommendResponse>("/recommend", { method: "POST", ...json(answers) }),
+  /** exclude：最近詳細を開いた映画のID（提案から外してもらう） */
+  recommend: (answers: Answers, exclude: number[] = []) =>
+    request<RecommendResponse>("/recommend", { method: "POST", ...json({ ...answers, exclude }) }),
 
   movie: (id: number) => request<MovieDetail>(`/movies/${id}`),
 

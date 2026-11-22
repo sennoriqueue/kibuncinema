@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { createDb, history } from "@kibuncinema/db";
-import { answersSchema } from "@kibuncinema/shared";
+import { recommendRequestSchema } from "@kibuncinema/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../env";
 import { rateLimit } from "../lib/rate-limit";
@@ -10,12 +10,12 @@ import { recommend } from "../lib/tmdb";
 export const recommendRoute = new Hono<AppEnv>().post(
   "/",
   rateLimit("RECOMMEND_LIMITER"),
-  zValidator("json", answersSchema, (result, c) => {
+  zValidator("json", recommendRequestSchema, (result, c) => {
     if (!result.success) return c.json({ error: "答えの形式が正しくありません" }, 400);
   }),
   async (c) => {
-    const answers = c.req.valid("json");
-    const result = await recommend(c.env, answers);
+    const { exclude, ...answers } = c.req.valid("json");
+    const result = await recommend(c.env, answers, exclude);
 
     // ログインしていれば、最初に見せる3本を履歴に残す
     const user = c.get("user");

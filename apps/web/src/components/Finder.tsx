@@ -11,6 +11,7 @@ import {
 } from "@kibuncinema/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api";
+import { useMyList } from "@/lib/local-store";
 import { HOME_EVENT } from "./HomeLink";
 import { MovieDialog } from "./MovieDialog";
 import { Ticket } from "./Ticket";
@@ -24,6 +25,8 @@ export function Finder() {
   const [offset, setOffset] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 最近詳細を開いた映画は、提案から外してもらう（ほかに候補が十分あるとき）
+  const { recent } = useMyList();
 
 
   // 詳細を開いている映画。開いている間は URL を /movie/:id にする（共有・戻るボタン用）
@@ -75,7 +78,7 @@ export function Finder() {
     setLoading(true);
     setError(null);
     try {
-      setResult(await api.recommend(all));
+      setResult(await api.recommend(all, recent.map((r) => r.id).slice(0, 100)));
       setOffset(0);
     } catch (e) {
       setError(e instanceof Error ? e.message : "エラーが起きました");

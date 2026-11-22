@@ -58,6 +58,13 @@ export const answersSchema = z.object({
 });
 
 export type Answers = z.infer<typeof answersSchema>;
+
+/** POST /api/recommend の本文。exclude は最近詳細を開いた映画（提案から外す） */
+export const recommendRequestSchema = answersSchema.extend({
+  exclude: z.array(z.number().int().positive()).max(100).optional(),
+});
+
+export type RecommendRequest = z.infer<typeof recommendRequestSchema>;
 export type QuestionId = keyof Answers;
 
 export function labelOf<K extends QuestionId>(id: K, value: Answers[K]): string {

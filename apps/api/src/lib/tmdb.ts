@@ -9,7 +9,7 @@ import type {
 import { eq, lt } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import type { Bindings } from "../env";
-import { buildDiscoverParams } from "./tmdb-params";
+import { buildDiscoverParams, scoreMovie } from "./tmdb-params";
 
 const TMDB_API = "https://api.themoviedb.org/3";
 /** おすすめの検索結果のキャッシュ時間 */
@@ -129,17 +129,15 @@ function toMovie(r: DiscoverResult): Movie {
   };
 }
 
-function shuffle<T>(items: T[]): T[] {
-  const a = items.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j] as T, a[i] as T];
-  }
-  return a;
-}
-
-/** 答えに合う映画を探して、シャッフルして返す */
-export async function recommend(env: Bindings, answers: Answers): Promise<RecommendResponse> {
+/**
+ * 答えに合う映画を探して、合いそうな順に並べて返す。
+ * exclude（最近詳細を開いた映画）は、ほかに候補が十分あれば外す
+ */
+export async function recommend(
+  env: Bindings,
+  answers: Answers,
+  exclude: number[] = [],
+): Promise<RecommendResponse> {
   let relaxed = false;
   let params = buildDiscoverParams(answers);
   let first = await discover(env, params);
@@ -154,7 +152,16 @@ export async function recommend(env: Bindings, answers: Answers): Promise<Recomm
   const page = 1 + Math.floor(Math.random() * pages);
   const data = page === 1 ? first : await discover(env, { ...params, page: String(page) });
 
-  const movies = shuffle(data.results.filter((r) => r.title).map(toMovie));
+  const all = data.results.filter((r) => r.title).map(toMovie);
+  const skip = new Set(exclude);
+  const fresh = all.filter((m) => !skip.has(m.id));
+  // 外した結果が3本未満なら、見たことのある映画も含めて出す
+  const candidates = fresh.length >= 3 ? fresh : all;
+
+  const movies = candidates
+    .map((m) => ({ m, score: scoreMovie(m, answers) }))
+    .sort((a, b) => b.score - a.score)
+    .map(({ m }) => m);
   return { movies, relaxed };
 }
 
