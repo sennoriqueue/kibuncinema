@@ -21,9 +21,29 @@ const body = Zen_Kaku_Gothic_New({
   preload: false,
 });
 
+const SITE_URL = "https://kibuncinema-web.sennoriqueue.workers.dev";
+const DESCRIPTION = "4つの質問に答えると、今の気分に合う映画を3本えらびます。";
+
 export const metadata: Metadata = {
+  // 共有カードの画像などを、本番の URL からの絶対パスにする
+  metadataBase: new URL(SITE_URL),
   title: "キブンシネマ",
-  description: "4つの質問に答えると、今の気分に合う映画を3本えらびます。",
+  description: DESCRIPTION,
+  // X などで共有されたときのカード。映画のページは、そのページで映画の画像に差し替える
+  openGraph: {
+    title: "キブンシネマ",
+    description: DESCRIPTION,
+    siteName: "キブンシネマ",
+    type: "website",
+    locale: "ja_JP",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "キブンシネマ　4つの質問で、今夜の一本。" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "キブンシネマ",
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {
