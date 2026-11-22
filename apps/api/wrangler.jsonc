@@ -6,6 +6,10 @@
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
 
+  // API は画面の Worker から Service Binding で呼ぶだけなので、公開URL（workers.dev）は付けない。
+  // 外から直接呼ばれて TMDB への問い合わせを増やされるのを防ぐ
+  "workers_dev": false,
+
   // `wrangler d1 create kibuncinema` で表示された database_id に置き換える
   "d1_databases": [
     {
