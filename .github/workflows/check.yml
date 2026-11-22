@@ -1,0 +1,36 @@
+# プルリクエストごとに、型チェックとビルドが通るかを確かめる（デプロイはしない）。
+# Dependabot の更新や、コードの変更でサイトが壊れていないかを、マージ前に分かるようにする
+name: Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (shared, db, api)
+        run: |
+          pnpm --filter @kibuncinema/shared run typecheck
+          pnpm --filter @kibuncinema/db run typecheck
+          pnpm --filter @kibuncinema/api run typecheck
+
+      # API を Workers 用にまとめられるか（アップロードはしない）
+      - name: Build API (dry run)
+        run: pnpm --filter @kibuncinema/api exec wrangler deploy --dry-run --outdir dist
+
+      # 画面のビルド（Next.js の型チェックも含む）と、Workers 用への変換
+      - name: Build web
+        run: pnpm --filter @kibuncinema/web exec opennextjs-cloudflare build
