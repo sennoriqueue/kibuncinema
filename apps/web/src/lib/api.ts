@@ -4,10 +4,15 @@ import type {
   FavoriteInput,
   FavoriteItem,
   HistoryItem,
+  Locale,
   MovieDetail,
   RecommendResponse,
 } from "@kibuncinema/shared";
 
+/**
+ * API のエラー。message はサーバーからの日本語の説明。
+ * 画面には、status から各言語の文言を選んで出す（errorMessage を使う）
+ */
 export class ApiRequestError extends Error {
   constructor(
     message: string,
@@ -39,10 +44,10 @@ const json = (body: unknown): Init => ({
 
 export const api = {
   /** exclude：最近詳細を開いた映画のID（提案から外してもらう） */
-  recommend: (answers: Answers, exclude: number[] = []) =>
-    request<RecommendResponse>("/recommend", { method: "POST", ...json({ ...answers, exclude }) }),
+  recommend: (answers: Answers, exclude: number[], locale: Locale) =>
+    request<RecommendResponse>("/recommend", { method: "POST", ...json({ ...answers, exclude, locale }) }),
 
-  movie: (id: number) => request<MovieDetail>(`/movies/${id}`),
+  movie: (id: number, locale: Locale) => request<MovieDetail>(`/movies/${id}?locale=${locale}`),
 
   favorites: () => request<{ items: FavoriteItem[] }>("/favorites"),
   addFavorite: (input: FavoriteInput) =>
@@ -59,3 +64,15 @@ export const api = {
       headers: { "content-type": file.type },
     }),
 };
+
+/** エラーを、今の言語の文言にする */
+export function errorMessage(
+  error: unknown,
+  messages: { tooMany: string; notFound: string; generic: string },
+): string {
+  if (error instanceof ApiRequestError) {
+    if (error.status === 429) return messages.tooMany;
+    if (error.status === 404) return messages.notFound;
+  }
+  return messages.generic;
+}

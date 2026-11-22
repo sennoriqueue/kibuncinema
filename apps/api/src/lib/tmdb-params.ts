@@ -1,4 +1,4 @@
-import { type Answers, GENRE } from "@kibuncinema/shared";
+import { type Answers, DEFAULT_LOCALE, GENRE, type Locale, TMDB_LOCALE } from "@kibuncinema/shared";
 
 /**
  * 気分 → 含めるジャンル（どれか1つ）と、除外するジャンル。
@@ -48,14 +48,19 @@ export function scoreMovie(
  */
 export function buildDiscoverParams(
   answers: Answers,
-  { relax = false, now = new Date() }: { relax?: boolean; now?: Date } = {},
+  {
+    relax = false,
+    now = new Date(),
+    locale = DEFAULT_LOCALE,
+  }: { relax?: boolean; now?: Date; locale?: Locale } = {},
 ): Record<string, string> {
   const mood = MOOD_GENRES[answers.mood];
+  const tmdb = TMDB_LOCALE[locale];
   const exclude = new Set(mood.exclude ?? []);
 
   const params: Record<string, string> = {
-    language: "ja-JP",
-    region: "JP",
+    language: tmdb.language,
+    region: tmdb.region,
     include_adult: "false",
     sort_by: "popularity.desc",
     "vote_count.gte": "200",
@@ -67,8 +72,8 @@ export function buildDiscoverParams(
   if (answers.who === "family") {
     exclude.add(GENRE.horror);
     exclude.add(GENRE.thriller);
-    params.certification_country = "JP";
-    params.certification = "G|PG12";
+    params.certification_country = tmdb.region;
+    params.certification = tmdb.familyCertifications;
   }
   if (answers.who === "couple" && answers.mood !== "tense") {
     // ふたりで観るなら、ホラー寄りの作品は外す

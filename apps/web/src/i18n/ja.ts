@@ -1,0 +1,160 @@
+/**
+ * 日本語の文言。これが元になり、en.ts と ko.ts は同じ形（Dict 型）で書く。
+ * 文言を足すときは、3つのファイルすべてに足すこと（足りないと型チェックで分かる）
+ */
+const ja = {
+  siteName: "キブンシネマ",
+  meta: {
+    description: "4つの質問に答えると、今の気分に合う映画を3本えらびます。",
+    ogImage: "/og.png",
+    ogAlt: "キブンシネマ　4つの質問で、今夜の一本。",
+    ogLocale: "ja_JP",
+  },
+  nav: {
+    myList: "マイリスト",
+    language: "言語",
+  },
+  home: {
+    lead: "4つの質問に答えると、今の気分に合う映画を3本えらびます。",
+  },
+  questions: {
+    mood: {
+      question: "今の気分は？",
+      options: {
+        cry: { label: "泣きたい", description: "心を揺さぶるドラマや恋愛" },
+        thrill: { label: "スカッとしたい", description: "迫力のアクション・冒険" },
+        laugh: { label: "笑いたい", description: "気楽に観られるコメディ" },
+        heal: { label: "癒されたい", description: "やさしいアニメ・ファミリー" },
+        tense: { label: "ドキドキしたい", description: "スリラーやホラー" },
+        think: { label: "じっくり考えたい", description: "SFやミステリー" },
+      },
+    },
+    who: {
+      question: "誰と観る？",
+      options: {
+        solo: { label: "一人で", description: "好きなものを好きなように" },
+        couple: { label: "恋人と", description: "ふたりで楽しめる作品" },
+        friends: { label: "友達と", description: "わいわい盛り上がりたい" },
+        family: { label: "家族と", description: "子どもも一緒に観られる作品" },
+      },
+    },
+    time: {
+      question: "使える時間は？",
+      options: {
+        short: { label: "90分以内", description: "さくっと観たい" },
+        mid: { label: "2時間くらい", description: "ふつうの長さで" },
+        long: { label: "長くてもOK", description: "時間はたっぷりある" },
+      },
+    },
+    era: {
+      question: "新しめ？名作？",
+      options: {
+        new: { label: "最近の作品", description: "ここ5年くらいの映画" },
+        classic: { label: "定番の名作", description: "評価の高い作品から" },
+        any: { label: "こだわらない", description: "おまかせで" },
+      },
+    },
+  },
+  finder: {
+    back: "← ひとつ戻る",
+    resultTitle: "今夜はこの3本",
+    searching: "今夜の一本をさがしています…",
+    retry: "もう一度さがす",
+    relaxed: "ぴったりの作品が少なかったので、時間と年代の条件をゆるめました。",
+    empty: "条件に合う作品が見つかりませんでした。条件を変えて試してください。",
+    changeConditions: "← 条件を変える",
+    next: "別の3本",
+    searchMore: "さらに探す",
+    restart: "最初から",
+  },
+  ticket: {
+    unknownYear: "年不明",
+    noOverview: "あらすじは登録されていません。",
+    openDetail: "詳細・配信を見る →",
+    openDetailAria: (title: string) => `${title}の詳細を見る`,
+    favorite: "お気に入り",
+  },
+  poster: {
+    alt: (title: string) => `${title}のポスター`,
+  },
+  detail: {
+    close: "閉じる",
+    minutes: (n: number) => `${n}分`,
+    director: "監督",
+    cast: "出演",
+    listSeparator: "、",
+    genreSeparator: "・",
+    share: "で投稿する",
+    trailer: "予告編を見る",
+    whereToWatch: "どこで観られる？",
+    flatrate: "見放題",
+    rentOrBuy: "レンタル・購入",
+    searchingProviders: "配信サービスを調べています…",
+    noProviders: "日本で配信しているサービスは見つかりませんでした。",
+    providerCredit: "配信情報：",
+    providerCreditSuffix: " 提供",
+    allProviders: "すべての配信サービスを見る（TMDB）",
+    searchOn: (service: string) => `${service}で探す →`,
+    seeWhere: "観られる場所を見る →",
+    loadError: "読み込めませんでした",
+    findYourOwn: "自分の気分で映画をさがす",
+  },
+  share: {
+    withMood: (mood: string, title: string) => `「${mood}」気分で選んだ今夜の一本は『${title}』`,
+    plain: (title: string) => `今夜の一本は『${title}』`,
+    hashtag: "キブンシネマ",
+  },
+  myList: {
+    title: "マイリスト",
+    note: "このブラウザだけに保存されています",
+    favorites: "お気に入り",
+    count: (n: number) => `${n}本`,
+    emptyBefore: "まだありません。",
+    emptyLink: "映画をさがす",
+    emptyAfter: "と、結果や詳細の「♡ お気に入り」で追加できます。",
+    remove: "外す",
+    recent: "最近見た映画",
+    clear: "履歴を消す",
+    recentNote: "詳細を開いた映画です。30日たつと自動で消えます。",
+    today: "今日",
+    yesterday: "昨日",
+  },
+  maker: {
+    label: "支配人",
+    name: "千利休",
+    bio: "都内で金融系インフラエンジニアをやっている29歳です。問い合わせ、改善要望はXのDMでお願いします。",
+  },
+  footer: {
+    dataBy: "映画データ提供：",
+    copyright: "© 2026 キブンシネマ / 千利休",
+  },
+  errors: {
+    tooMany: "アクセスが集中しています。1分ほど待ってから、もう一度試してください",
+    notFound: "映画が見つかりませんでした",
+    generic: "エラーが起きました。少し待ってから、もう一度試してください",
+  },
+  genres: {
+    28: "アクション",
+    12: "アドベンチャー",
+    16: "アニメ",
+    35: "コメディ",
+    80: "犯罪",
+    99: "ドキュメンタリー",
+    18: "ドラマ",
+    10751: "ファミリー",
+    14: "ファンタジー",
+    36: "歴史",
+    27: "ホラー",
+    10402: "音楽",
+    9648: "ミステリー",
+    10749: "ロマンス",
+    878: "SF",
+    10770: "テレビ映画",
+    53: "スリラー",
+    10752: "戦争",
+    37: "西部劇",
+  } as Record<number, string>,
+};
+
+export default ja;
+export type Dict = typeof ja;

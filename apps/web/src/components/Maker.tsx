@@ -1,18 +1,18 @@
-/** 全ページの下に出す「このサイトをつくった人」 */
-export function Maker() {
+import type { Dict } from "@/i18n";
+
+/** 全ページの下に出す、この映画館（サイト）の支配人の紹介 */
+export function Maker({ t }: { t: Dict }) {
   return (
     <section className="maker" aria-labelledby="maker-name">
       <div className="wrap">
         <div className="maker-card">
           <img className="maker-icon" src="/maker.jpg" alt="" width={72} height={72} />
           <div>
-            <p className="maker-label">このサイトをつくった人</p>
+            <p className="maker-label">{t.maker.label}</p>
             <h2 className="maker-name" id="maker-name">
-              千利休
+              {t.maker.name}
             </h2>
-            <p className="maker-bio">
-              都内で金融系インフラエンジニアをやっている29歳です。問い合わせ、改善要望はXのDMでお願いします。
-            </p>
+            <p className="maker-bio">{t.maker.bio}</p>
           </div>
           <div className="maker-links">
             <a className="x-btn" href="https://x.com/sennoriqueue" target="_blank" rel="noopener">

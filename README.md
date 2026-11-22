@@ -124,6 +124,17 @@ http://localhost:3000 を開きます。
   API はシークレットがそろっていないとき、ログインしていない扱いで動きます
 - 戻すときは、`apps/web/src/app/layout.tsx` の `<MyListLink />` を `<AuthButton />` に戻し、シークレットを登録します
 
+## 多言語対応
+
+日本語・英語・韓国語に対応しています。
+
+- URL：日本語は前置きなし（`/movie/1`）、英語は `/en/…`、韓国語は `/ko/…`。`apps/web/src/middleware.ts` が振り分ける
+- トップに初めて来た人は、選んだ言語（Cookie）か、ブラウザの言語設定で振り分ける。日本語・韓国語以外の人には英語
+- 画面の文言は `apps/web/src/i18n/ja.ts`・`en.ts`・`ko.ts`。文言を足すときは3つすべてに足す（足りないと型チェックで分かる）
+- 映画のタイトル・あらすじは TMDB からその言語で取る。配信サービスは言語で国を決める（日本語→日本、英語→アメリカ、韓国語→韓国）。
+  設定は `packages/shared/src/locale.ts`
+- 共有カードの画像は `public/og.png`・`og-en.png`・`og-ko.png`
+
 ## スキーマを変えるとき
 
 1. `packages/db/src/schema.ts` を編集

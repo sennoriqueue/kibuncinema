@@ -14,8 +14,8 @@ export const recommendRoute = new Hono<AppEnv>().post(
     if (!result.success) return c.json({ error: "答えの形式が正しくありません" }, 400);
   }),
   async (c) => {
-    const { exclude, ...answers } = c.req.valid("json");
-    const result = await recommend(c.env, answers, exclude);
+    const { exclude, locale, ...answers } = c.req.valid("json");
+    const result = await recommend(c.env, answers, exclude, locale);
 
     // ログインしていれば、最初に見せる3本を履歴に残す
     const user = c.get("user");

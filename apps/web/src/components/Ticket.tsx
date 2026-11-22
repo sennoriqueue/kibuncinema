@@ -1,6 +1,7 @@
 "use client";
 
-import { GENRES, type Movie } from "@kibuncinema/shared";
+import type { Movie } from "@kibuncinema/shared";
+import { useI18n } from "@/i18n/I18nProvider";
 import { toggleFavorite, useIsFavorite } from "@/lib/local-store";
 import { Poster } from "./Poster";
 
@@ -11,16 +12,17 @@ type Props = {
 };
 
 export function Ticket({ movie, onOpen }: Props) {
+  const { t } = useI18n();
   const favorite = useIsFavorite(movie.id);
   const genres = movie.genreIds
     .slice(0, 2)
-    .map((g) => GENRES[g])
+    .map((g) => t.genres[g])
     .filter(Boolean)
-    .join("・");
+    .join(t.detail.genreSeparator);
 
   return (
     <article className="tk">
-      <button type="button" className="poster poster-btn" onClick={onOpen} aria-label={`${movie.title}の詳細を見る`}>
+      <button type="button" className="poster poster-btn" onClick={onOpen} aria-label={t.ticket.openDetailAria(movie.title)}>
         <Poster title={movie.title} year={movie.year} genreIds={movie.genreIds} path={movie.posterPath} />
       </button>
       <div className="stub">
@@ -31,13 +33,13 @@ export function Ticket({ movie, onOpen }: Props) {
         </h2>
         <div className="meta">
           <span className="star">★ {movie.rating.toFixed(1)}</span>
-          <span>{movie.year || "年不明"}</span>
+          <span>{movie.year || t.ticket.unknownYear}</span>
           {genres && <span>{genres}</span>}
         </div>
-        <p className="ov">{movie.overview || "あらすじは登録されていません。"}</p>
+        <p className="ov">{movie.overview || t.ticket.noOverview}</p>
         <div className="stub-foot">
           <button type="button" className="more-btn" onClick={onOpen}>
-            詳細・配信を見る →
+            {t.ticket.openDetail}
           </button>
           <button
             type="button"
@@ -45,7 +47,7 @@ export function Ticket({ movie, onOpen }: Props) {
             aria-pressed={favorite}
             onClick={() => toggleFavorite(movie)}
           >
-            {favorite ? "♥ お気に入り" : "♡ お気に入り"}
+            {favorite ? "♥" : "♡"} {t.ticket.favorite}
           </button>
         </div>
       </div>

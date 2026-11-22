@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LOCALES } from "./locale";
 
 export type QuestionOption = { value: string; label: string; description: string };
 export type Question = { id: string; question: string; options: readonly QuestionOption[] };
@@ -62,6 +63,8 @@ export type Answers = z.infer<typeof answersSchema>;
 /** POST /api/recommend の本文。exclude は最近詳細を開いた映画（提案から外す） */
 export const recommendRequestSchema = answersSchema.extend({
   exclude: z.array(z.number().int().positive()).max(100).optional(),
+  /** 画面の言語。TMDB の言語と、配信サービスの国が決まる */
+  locale: z.enum(LOCALES).optional(),
 });
 
 export type RecommendRequest = z.infer<typeof recommendRequestSchema>;

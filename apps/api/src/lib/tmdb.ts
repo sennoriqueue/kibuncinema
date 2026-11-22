@@ -1,10 +1,13 @@
 import { createDb, tmdbCache } from "@kibuncinema/db";
-import type {
-  Answers,
-  Movie,
-  MovieDetail,
-  RecommendResponse,
-  WatchProvider,
+import {
+  type Answers,
+  DEFAULT_LOCALE,
+  type Locale,
+  type Movie,
+  type MovieDetail,
+  type RecommendResponse,
+  TMDB_LOCALE,
+  type WatchProvider,
 } from "@kibuncinema/shared";
 import { eq, lt } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
@@ -137,14 +140,15 @@ export async function recommend(
   env: Bindings,
   answers: Answers,
   exclude: number[] = [],
+  locale: Locale = DEFAULT_LOCALE,
 ): Promise<RecommendResponse> {
   let relaxed = false;
-  let params = buildDiscoverParams(answers);
+  let params = buildDiscoverParams(answers, { locale });
   let first = await discover(env, params);
 
   if (first.total_results < 3) {
     relaxed = true;
-    params = buildDiscoverParams(answers, { relax: true });
+    params = buildDiscoverParams(answers, { relax: true, locale });
     first = await discover(env, params);
   }
 
@@ -203,23 +207,31 @@ function toProviders(list: TmdbProvider[]): WatchProvider[] {
     .map((p) => ({ id: p.provider_id, name: p.provider_name, logoPath: p.logo_path }));
 }
 
-/** 予告編を1本選ぶ。日本語の公式予告編 → 日本語 → 英語の公式予告編 → なんでも、の順 */
-function pickTrailer(videos: NonNullable<TmdbMovieDetail["videos"]>["results"]): string | null {
+/** 予告編を1本選ぶ。その言語の公式予告編 → その言語 → 英語の公式予告編 → なんでも、の順 */
+function pickTrailer(videos: NonNullable<TmdbMovieDetail["videos"]>["results"], lang: string): string | null {
   const yt = videos.filter((v) => v.site === "YouTube" && (v.type === "Trailer" || v.type === "Teaser"));
   const score = (v: (typeof yt)[number]) =>
-    (v.iso_639_1 === "ja" ? 4 : 0) + (v.type === "Trailer" ? 2 : 0) + (v.official ? 1 : 0);
+    (v.iso_639_1 === lang ? 4 : 0) + (v.type === "Trailer" ? 2 : 0) + (v.official ? 1 : 0);
   const best = yt.sort((a, b) => score(b) - score(a))[0];
   return best?.key ?? null;
 }
 
-export async function movieDetail(env: Bindings, id: number): Promise<MovieDetail> {
+/** 映画の詳細。locale でタイトルやあらすじの言語と、配信サービスの国が決まる */
+export async function movieDetail(
+  env: Bindings,
+  id: number,
+  locale: Locale = DEFAULT_LOCALE,
+): Promise<MovieDetail> {
+  const tmdb = TMDB_LOCALE[locale];
+  const lang = tmdb.language.split("-")[0] ?? "en";
   const d = await tmdbGet<TmdbMovieDetail>(env, `/movie/${id}`, {
-    language: "ja-JP",
+    language: tmdb.language,
     append_to_response: "credits,videos,watch/providers",
-    include_video_language: "ja,en",
+    // その言語の予告編を優先し、なければ英語
+    include_video_language: lang === "en" ? "en" : `${lang},en`,
   }, DETAIL_CACHE_SECONDS);
 
-  const jp = d["watch/providers"]?.results?.JP;
+  const jp = d["watch/providers"]?.results?.[tmdb.region];
   const flatrate = toProviders(jp?.flatrate ?? []);
   const seen = new Set(flatrate.map((p) => p.id));
   const rentOrBuy = toProviders([...(jp?.rent ?? []), ...(jp?.buy ?? [])]).filter((p) => {
@@ -246,7 +258,7 @@ export async function movieDetail(env: Bindings, id: number): Promise<MovieDetai
       .sort((a, b) => a.order - b.order)
       .slice(0, 5)
       .map((c) => c.name),
-    trailerKey: pickTrailer(d.videos?.results ?? []),
+    trailerKey: pickTrailer(d.videos?.results ?? [], lang),
     providers: { link: jp?.link ?? null, flatrate, rentOrBuy },
   };
 }
