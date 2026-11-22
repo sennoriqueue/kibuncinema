@@ -93,16 +93,26 @@ http://localhost:3000 を開きます。
 
 ## 本番へのデプロイ
 
-1. `apps/api/wrangler.jsonc` の `WEB_ORIGIN` を画面の本番 URL（例：`https://kibuncinema-web.<アカウント>.workers.dev`）に変える
-2. シークレットを登録する
+`main` にマージすると、GitHub Actions（`.github/workflows/deploy.yml`）が自動で本番にデプロイします。
+画面側を Workers 用に変換する OpenNext は Windows での動作が保証されていないため、ビルドは GitHub の Linux 環境で行います。
+
+### 最初に一度だけやること
+
+1. **D1 の database_id を設定する**：`apps/api` で `pnpm wrangler d1 list` を実行し、
+   `kibuncinema` の ID を `apps/api/wrangler.jsonc` の `database_id` に書いて `main` に入れる
+2. **TMDB のトークンを本番に登録する**（`apps/api` で実行）
    ```sh
-   cd apps/api
    pnpm wrangler secret put TMDB_TOKEN
    ```
-   ログイン機能を戻すときは `BETTER_AUTH_SECRET`・`GOOGLE_CLIENT_ID`・`GOOGLE_CLIENT_SECRET` も登録する
-3. （ログイン機能を戻すときだけ）Google の OAuth クライアントに、本番のリダイレクト URI（`<画面のURL>/api/auth/callback/google`）を追加する
-4. `pnpm db:migrate:remote`
-5. `pnpm run deploy`（API → 画面の順にデプロイ。画面は Service Binding で API を呼ぶため）
+   まだ一度もデプロイしていないときは「Worker を作るか」と聞かれるので、そのまま作る
+3. **Cloudflare の API トークンを作る**：ダッシュボード → 右上のアイコン →「プロフィール」→「API トークン」→「トークンを作成」。
+   「Cloudflare Workers を編集する」テンプレートを使い、権限に「アカウント → D1 → 編集」を追加する
+4. **GitHub にシークレットを登録する**：リポジトリの Settings → Secrets and variables → Actions → New repository secret
+   - `CLOUDFLARE_API_TOKEN`：3 で作ったトークン
+   - `CLOUDFLARE_ACCOUNT_ID`：ダッシュボードの「Workers & Pages」の画面右側などに表示されるアカウントID
+5. GitHub の Actions タブ →「Deploy」→「Run workflow」で手動実行するか、`main` にマージする
+
+デプロイが終わると、画面は `https://kibuncinema-web.<アカウントのサブドメイン>.workers.dev` で公開されます。
 
 ## ログイン機能について
 

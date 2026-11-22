@@ -2,7 +2,8 @@ import type { AuthSession, AuthUser } from "./lib/auth";
 
 export type Bindings = {
   DB: D1Database;
-  BUCKET: R2Bucket;
+  /** アイコン画像の保存先。ログイン機能を止めているあいだは未設定 */
+  BUCKET?: R2Bucket;
   WEB_ORIGIN: string;
   TMDB_TOKEN: string;
   // ログイン機能を使うときだけ必要（今は止めているので未設定でよい）

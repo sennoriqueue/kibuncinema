@@ -16,8 +16,9 @@
     }
   ],
 
-  // `wrangler r2 bucket create kibuncinema-assets` で作成する
-  "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "kibuncinema-assets" }],
+  // R2（アイコン画像の保存先）はログイン機能を止めているあいだ使わないので外している。
+  // 戻すときは R2 を有効にして `wrangler r2 bucket create kibuncinema-assets` を実行し、次の行を戻す
+  // "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "kibuncinema-assets" }],
 
   // 本番では Next.js 側の URL に変える（ログインのリダイレクト先にもなる）
   "vars": {

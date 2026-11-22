@@ -13,6 +13,7 @@ export const meRoute = new Hono<AppEnv>()
   /** PUT /api/me/avatar  本文に画像そのものを送る（Content-Type: image/png など） */
   .put("/avatar", requireUser, async (c) => {
     const user = currentUser(c);
+    if (!c.env.BUCKET) return c.json({ error: "画像の保存先が設定されていません" }, 503);
     const type = c.req.header("content-type")?.split(";")[0]?.trim() ?? "";
     if (!IMAGE_TYPES.includes(type)) {
       return c.json({ error: "PNG・JPEG・WebP の画像を送ってください" }, 415);
@@ -36,6 +37,7 @@ export const meRoute = new Hono<AppEnv>()
 
 /** GET /api/images/avatars/:id  R2 の画像を返す */
 export const imagesRoute = new Hono<AppEnv>().get("/avatars/:id", async (c) => {
+  if (!c.env.BUCKET) return c.notFound();
   const object = await c.env.BUCKET.get(`avatars/${c.req.param("id")}`);
   if (!object) return c.notFound();
   const headers = new Headers();
