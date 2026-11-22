@@ -2,6 +2,7 @@
 
 import { posterUrl } from "@kibuncinema/shared";
 import { useState } from "react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const GENRE_COLORS: Record<number, string> = {
   18: "#5b3a8c",
@@ -30,11 +31,12 @@ type Props = {
 
 /** TMDB のポスター。画像がないとき・読み込めないときは、ジャンルの色で代わりの絵を描く */
 export function Poster({ title, year, genreIds = [], path, size = "w342" }: Props) {
+  const { t } = useI18n();
   const [failed, setFailed] = useState(false);
   const src = posterUrl(path, size);
 
   if (src && !failed) {
-    return <img src={src} alt={`${title}のポスター`} loading="lazy" onError={() => setFailed(true)} />;
+    return <img src={src} alt={t.poster.alt(title)} loading="lazy" onError={() => setFailed(true)} />;
   }
 
   const c1 = GENRE_COLORS[genreIds[0] ?? 0] ?? "#5b3a8c";

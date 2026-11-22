@@ -7,10 +7,10 @@ import {
   type QuestionId,
   QUESTIONS,
   type RecommendResponse,
-  labelOf,
 } from "@kibuncinema/shared";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api } from "@/lib/api";
+import { useI18n } from "@/i18n/I18nProvider";
+import { api, errorMessage } from "@/lib/api";
 import { useMyList } from "@/lib/local-store";
 import { HOME_EVENT } from "./HomeLink";
 import { MovieDialog } from "./MovieDialog";
@@ -18,7 +18,13 @@ import { Ticket } from "./Ticket";
 
 const PER_PAGE = 3;
 
+type OptionText = { label: string; description: string };
+
 export function Finder() {
+  const { locale, t, href } = useI18n();
+  /** 質問の文言（今の言語） */
+  const text = (id: QuestionId) => t.questions[id] as { question: string; options: Record<string, OptionText> };
+  const optionLabel = (id: QuestionId, value: string) => text(id).options[value]?.label ?? value;
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Partial<Answers>>({});
   const [result, setResult] = useState<RecommendResponse | null>(null);
@@ -28,14 +34,13 @@ export function Finder() {
   // 最近詳細を開いた映画は、提案から外してもらう（ほかに候補が十分あるとき）
   const { recent } = useMyList();
 
-
   // 詳細を開いている映画。開いている間は URL を /movie/:id にする（共有・戻るボタン用）
   const [openMovie, setOpenMovie] = useState<Movie | null>(null);
   const pushedUrl = useRef(false);
 
   useEffect(() => {
     const onPop = () => {
-      if (!window.location.pathname.startsWith("/movie/")) {
+      if (!/\/movie\/\d+/.test(window.location.pathname)) {
         pushedUrl.current = false;
         setOpenMovie(null);
       }
@@ -61,7 +66,7 @@ export function Finder() {
 
   function openDetail(movie: Movie) {
     setOpenMovie(movie);
-    window.history.pushState(null, "", `/movie/${movie.id}`);
+    window.history.pushState(null, "", href(`/movie/${movie.id}`));
     pushedUrl.current = true;
   }
 
@@ -78,10 +83,10 @@ export function Finder() {
     setLoading(true);
     setError(null);
     try {
-      setResult(await api.recommend(all, recent.map((r) => r.id).slice(0, 100)));
+      setResult(await api.recommend(all, recent.map((r) => r.id).slice(0, 100), locale));
       setOffset(0);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "エラーが起きました");
+      setError(errorMessage(e, t.errors));
     } finally {
       setLoading(false);
     }
@@ -124,7 +129,7 @@ export function Finder() {
             ))}
           </div>
         </div>
-        <h1 className="q">{q.question}</h1>
+        <h1 className="q">{text(q.id as QuestionId).question}</h1>
         <div className="opts">
           {q.options.map((o) => (
             <button
@@ -133,15 +138,15 @@ export function Finder() {
               className={`opt${selected === o.value ? " sel" : ""}`}
               onClick={() => choose(q.id as QuestionId, o.value)}
             >
-              <b>{o.label}</b>
-              <span>{o.description}</span>
+              <b>{optionLabel(q.id as QuestionId, o.value)}</b>
+              <span>{text(q.id as QuestionId).options[o.value]?.description}</span>
             </button>
           ))}
         </div>
         <div className="foot">
           {step > 0 ? (
             <button type="button" className="link-btn" onClick={back}>
-              ← ひとつ戻る
+              {t.finder.back}
             </button>
           ) : (
             <span />
@@ -158,32 +163,32 @@ export function Finder() {
 
   return (
     <section className="booth" aria-live="polite">
-      <h1 className="q">今夜はこの3本</h1>
+      <h1 className="q">{t.finder.resultTitle}</h1>
       <ul className="chips">
         {QUESTIONS.map((q) => (
-          <li key={q.id}>{labelOf(q.id as QuestionId, all[q.id as QuestionId])}</li>
+          <li key={q.id}>{optionLabel(q.id as QuestionId, all[q.id as QuestionId])}</li>
         ))}
       </ul>
 
       {loading && (
         <div className="spin">
           <i />
-          今夜の一本をさがしています…
+          {t.finder.searching}
         </div>
       )}
       {error && (
         <div className="empty">
           <p>{error}</p>
           <button type="button" className="btn" onClick={() => find(all)}>
-            もう一度さがす
+            {t.finder.retry}
           </button>
         </div>
       )}
       {result?.relaxed && (
-        <p className="note">ぴったりの作品が少なかったので、時間と年代の条件をゆるめました。</p>
+        <p className="note">{t.finder.relaxed}</p>
       )}
       {!loading && !error && result && movies.length === 0 && (
-        <div className="empty">条件に合う作品が見つかりませんでした。条件を変えて試してください。</div>
+        <div className="empty">{t.finder.empty}</div>
       )}
       {!loading && movies.length > 0 && (
         <div className="tickets">
@@ -201,28 +206,28 @@ export function Finder() {
         <MovieDialog
           movieId={openMovie.id}
           preview={openMovie}
-          moodLabel={all.mood ? labelOf("mood", all.mood) : undefined}
+          moodLabel={all.mood ? optionLabel("mood", all.mood) : undefined}
           onClose={closeDetail}
         />
       )}
 
       <div className="foot">
         <button type="button" className="link-btn" onClick={back}>
-          ← 条件を変える
+          {t.finder.changeConditions}
         </button>
         <span className="row">
           {hasMore && (
             <button type="button" className="btn" onClick={() => setOffset((o) => o + PER_PAGE)}>
-              別の3本
+              {t.finder.next}
             </button>
           )}
           {!hasMore && result && result.movies.length > 0 && (
             <button type="button" className="btn" onClick={() => find(all)}>
-              さらに探す
+              {t.finder.searchMore}
             </button>
           )}
           <button type="button" className="btn alt" onClick={restart}>
-            最初から
+            {t.finder.restart}
           </button>
         </span>
       </div>

@@ -3,39 +3,42 @@
 import Link from "next/link";
 import { useState } from "react";
 import { MovieDialog } from "@/components/MovieDialog";
+import type { Dict, Locale } from "@/i18n";
+import { useI18n } from "@/i18n/I18nProvider";
 import { Poster } from "@/components/Poster";
 import { type SavedMovie, clearRecent, removeFavorite, useMyList } from "@/lib/local-store";
 
-const dateFormat = new Intl.DateTimeFormat("ja-JP", { month: "long", day: "numeric" });
-
-/** 「今日」「昨日」、それより前は「11月18日」 */
-function viewedLabel(time: number) {
-  const day = (t: number) => new Date(t).toDateString();
-  if (day(time) === day(Date.now())) return "今日";
-  if (day(time) === day(Date.now() - 24 * 60 * 60 * 1000)) return "昨日";
-  return dateFormat.format(time);
+/** 「今日」「昨日」、それより前は「11月18日」「Nov 18」など、今の言語の日付 */
+function viewedLabel(time: number, locale: Locale, t: Dict) {
+  const day = (d: number) => new Date(d).toDateString();
+  if (day(time) === day(Date.now())) return t.myList.today;
+  if (day(time) === day(Date.now() - 24 * 60 * 60 * 1000)) return t.myList.yesterday;
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(time);
 }
 
 /** マイリスト：このブラウザに保存したお気に入りと、最近詳細を開いた映画 */
 export default function MyListPage() {
+  const { locale, t, href } = useI18n();
   const { favorites, recent } = useMyList();
   const [open, setOpen] = useState<SavedMovie | null>(null);
 
   return (
     <div className="mylist">
       <div className="mylist-head">
-        <h1 className="q">マイリスト</h1>
-        <p className="mylist-note">このブラウザだけに保存されています</p>
+        <h1 className="q">{t.myList.title}</h1>
+        <p className="mylist-note">{t.myList.note}</p>
       </div>
 
       <section className="booth">
         <div className="mylist-sec">
-          <h2 className="h2">お気に入り</h2>
-          {favorites.length > 0 && <span className="note">{favorites.length}本</span>}
+          <h2 className="h2">{t.myList.favorites}</h2>
+          {favorites.length > 0 && <span className="note">{t.myList.count(favorites.length)}</span>}
         </div>
         {favorites.length === 0 ? (
           <p className="note">
-            まだありません。<Link href="/">映画をさがす</Link>と、結果や詳細の「♡ お気に入り」で追加できます。
+            {t.myList.emptyBefore}
+            <Link href={href("/")}>{t.myList.emptyLink}</Link>
+            {t.myList.emptyAfter}
           </p>
         ) : (
           <ul className="mylist-grid">
@@ -43,7 +46,7 @@ export default function MyListPage() {
               <li key={m.id}>
                 <MiniPoster movie={m} onOpen={() => setOpen(m)} />
                 <button type="button" className="link-btn mylist-small" onClick={() => removeFavorite(m.id)}>
-                  外す
+                  {t.myList.remove}
                 </button>
               </li>
             ))}
@@ -53,20 +56,20 @@ export default function MyListPage() {
 
       <section className="booth">
         <div className="mylist-sec">
-          <h2 className="h2">最近見た映画</h2>
+          <h2 className="h2">{t.myList.recent}</h2>
           {recent.length > 0 && (
             <button type="button" className="link-btn mylist-small" onClick={clearRecent}>
-              履歴を消す
+              {t.myList.clear}
             </button>
           )}
         </div>
-        <p className="note">詳細を開いた映画です。30日たつと自動で消えます。</p>
+        <p className="note">{t.myList.recentNote}</p>
         {recent.length > 0 && (
           <ul className="mylist-grid small">
             {recent.map((m) => (
               <li key={m.id}>
                 <MiniPoster movie={m} onOpen={() => setOpen(m)} />
-                <time dateTime={new Date(m.viewedAt).toISOString()}>{viewedLabel(m.viewedAt)}</time>
+                <time dateTime={new Date(m.viewedAt).toISOString()}>{viewedLabel(m.viewedAt, locale, t)}</time>
               </li>
             ))}
           </ul>
