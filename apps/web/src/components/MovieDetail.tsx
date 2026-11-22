@@ -9,26 +9,24 @@ import {
 } from "@kibuncinema/shared";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { recordView, toggleFavorite, useIsFavorite } from "@/lib/local-store";
 import { xShareUrl } from "@/lib/share";
 import { providerLabel, providerSearchUrl } from "@/lib/watch-links";
 import { Poster } from "./Poster";
 
 type Props = {
   movieId: number;
-  /** 結果の一覧から開いたときのデータ。詳細が届くまでの仮表示に使う */
-  preview?: Movie;
+  /** 一覧から開いたときのデータ。詳細が届くまでの仮表示に使う */
+  preview?: Pick<Movie, "title" | "posterPath"> & Partial<Movie>;
   /** Xに投稿する文章に入れる気分（「泣きたい」など） */
   moodLabel?: string;
-  /** undefined のときはお気に入りボタンを出さない（未ログイン） */
-  favorite?: boolean;
-  onToggleFavorite?: (movie: { id: number; title: string; posterPath: string | null }) => void;
   /** ダイアログとして開いたときの閉じるボタン */
   onClose?: () => void;
   /** ダイアログ内の見出しに付けるID（aria-labelledby 用） */
   titleId?: string;
 };
 
-export function MovieDetail({ movieId, preview, moodLabel, favorite, onToggleFavorite, onClose, titleId }: Props) {
+export function MovieDetail({ movieId, preview, moodLabel, onClose, titleId }: Props) {
   const [detail, setDetail] = useState<Detail | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,7 +47,15 @@ export function MovieDetail({ movieId, preview, moodLabel, favorite, onToggleFav
   const year = detail?.year ?? preview?.year ?? "";
   const rating = detail?.rating ?? preview?.rating;
   const posterPath = detail?.posterPath ?? preview?.posterPath ?? null;
-  const genres = detail?.genres ?? preview?.genreIds.map((g) => GENRES[g]).filter((g): g is string => Boolean(g)) ?? [];
+  const genres =
+    detail?.genres ?? preview?.genreIds?.map((g) => GENRES[g]).filter((g): g is string => Boolean(g)) ?? [];
+  const favorite = useIsFavorite(movieId);
+
+  // 詳細を開いた映画として、このブラウザに記録する（マイリストの「最近見た映画」）
+  useEffect(() => {
+    if (!title) return;
+    recordView({ id: movieId, title, posterPath, year, genreIds: preview?.genreIds });
+  }, [movieId, title, posterPath, year, preview?.genreIds]);
   const overview = detail?.overview || preview?.overview || "";
 
   function share() {
@@ -118,16 +124,14 @@ export function MovieDetail({ movieId, preview, moodLabel, favorite, onToggleFav
               </span>
               で投稿する
             </button>
-            {onToggleFavorite && (
-              <button
-                type="button"
-                className={`btn alt${favorite ? " is-on" : ""}`}
-                aria-pressed={favorite}
-                onClick={() => onToggleFavorite({ id: movieId, title, posterPath })}
-              >
-                {favorite ? "♥ お気に入り" : "♡ お気に入り"}
-              </button>
-            )}
+            <button
+              type="button"
+              className={`btn alt${favorite ? " is-on" : ""}`}
+              aria-pressed={favorite}
+              onClick={() => toggleFavorite({ id: movieId, title, posterPath, year, genreIds: preview?.genreIds })}
+            >
+              {favorite ? "♥ お気に入り" : "♡ お気に入り"}
+            </button>
             {detail?.trailerKey && (
               <a
                 className="btn alt"

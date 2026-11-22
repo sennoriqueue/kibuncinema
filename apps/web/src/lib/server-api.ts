@@ -7,7 +7,8 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 export async function serverApi<T>(path: string): Promise<T | null> {
   try {
     const req = new Request(`https://api.internal/api${path}`, { headers: { accept: "application/json" } });
-    const apiOrigin = process.env.API_ORIGIN;
+    // 開発中（next dev）だけ wrangler dev に fetch する。本番のビルドに .env の値が混ざっても使わない
+    const apiOrigin = process.env.NODE_ENV === "development" ? process.env.API_ORIGIN : undefined;
     let res: Response;
     if (apiOrigin) {
       res = await fetch(new URL(`/api${path}`, apiOrigin), { headers: req.headers });

@@ -1,0 +1,46 @@
+# main にマージされたら、Cloudflare に本番デプロイする。
+# OpenNext（Next.js を Workers 用に変換するツール）は Windows での動作が保証されていないため、
+# ビルドとデプロイは GitHub の Linux 環境で行う。
+#
+# 必要な GitHub のシークレット（Settings → Secrets and variables → Actions）:
+#   CLOUDFLARE_API_TOKEN   Workers と D1 を編集できる API トークン
+#   CLOUDFLARE_ACCOUNT_ID  Cloudflare のアカウントID
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Actions の画面から手動でも実行できる
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4 # バージョンは package.json の packageManager に従う
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # D1 のテーブルを最新にする（適用済みのものは飛ばされる）
+      - name: Apply D1 migrations
+        run: pnpm --filter @kibuncinema/api exec wrangler d1 migrations apply kibuncinema --remote
+
+      # 画面は Service Binding で API を呼ぶので、API を先にデプロイする
+      - name: Deploy API
+        run: pnpm --filter @kibuncinema/api run deploy
+
+      - name: Deploy web
+        run: pnpm --filter @kibuncinema/web run deploy

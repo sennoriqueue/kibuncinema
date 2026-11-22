@@ -22,7 +22,8 @@ async function proxy(request: Request): Promise<Response> {
   };
   if (hasBody) init.duplex = "half";
 
-  const apiOrigin = process.env.API_ORIGIN;
+  // 開発中（next dev）だけ wrangler dev に fetch する。本番のビルドに .env の値が混ざっても使わない
+  const apiOrigin = process.env.NODE_ENV === "development" ? process.env.API_ORIGIN : undefined;
   let response: Response;
   if (apiOrigin) {
     response = await fetch(new URL(url.pathname + url.search, apiOrigin), init);

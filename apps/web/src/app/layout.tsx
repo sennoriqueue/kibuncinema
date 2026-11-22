@@ -2,9 +2,9 @@ import type { Metadata, Viewport } from "next";
 import { Shippori_Mincho_B1, Zen_Kaku_Gothic_New } from "next/font/google";
 import { Astronaut } from "@/components/art/Astronaut";
 import { DriveIn } from "@/components/art/DriveIn";
-import { AuthButton } from "@/components/AuthButton";
 import { HomeLink } from "@/components/HomeLink";
 import { Maker } from "@/components/Maker";
+import { MyListLink } from "@/components/MyListLink";
 import "./globals.css";
 
 // 見出しは映画のタイトルクレジットのような明朝体、本文は読みやすいゴシック体
@@ -44,7 +44,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               <span className="logo-mark" aria-hidden />
               キブンシネマ
             </HomeLink>
-            <AuthButton />
+            {/* ログイン機能は止めている。戻すときは <AuthButton /> に差し替える */}
+            <MyListLink />
           </div>
         </header>
         <Astronaut />

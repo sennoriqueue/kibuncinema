@@ -8,7 +8,7 @@
 | バックエンド | Hono（Cloudflare Workers） |
 | データベース | Cloudflare D1（Drizzle ORM） |
 | ファイル | Cloudflare R2（ユーザーのアイコン画像） |
-| 認証 | Better Auth（Google ログイン） |
+| 認証 | Better Auth（Google ログイン）※現在は停止中。お気に入りと履歴はブラウザに保存 |
 | 映画データ | TMDB API |
 
 ## 構成
@@ -71,9 +71,12 @@ cp apps/api/.dev.vars.example apps/api/.dev.vars
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-`apps/api/.dev.vars` に次の値を入れます。
+`apps/api/.dev.vars` に次の値を入れます。今はログイン機能を止めているので、必要なのは `TMDB_TOKEN` だけです。
 
 - `TMDB_TOKEN`：TMDB の設定画面 → API にある「API 読み取りアクセストークン」
+
+ログイン機能を戻すときは、次の3つも入れます（3つそろったときだけログインが動きます）。
+
 - `BETTER_AUTH_SECRET`：`openssl rand -base64 32` などで作ったランダムな文字列
 - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`：Google Cloud Console →「API とサービス」→「認証情報」で
   OAuth クライアント ID（ウェブアプリケーション）を作成。
@@ -90,18 +93,36 @@ http://localhost:3000 を開きます。
 
 ## 本番へのデプロイ
 
-1. `apps/api/wrangler.jsonc` の `WEB_ORIGIN` を画面の本番 URL（例：`https://kibuncinema-web.<アカウント>.workers.dev`）に変える
-2. シークレットを登録する
+`main` にマージすると、GitHub Actions（`.github/workflows/deploy.yml`）が自動で本番にデプロイします。
+画面側を Workers 用に変換する OpenNext は Windows での動作が保証されていないため、ビルドは GitHub の Linux 環境で行います。
+
+### 最初に一度だけやること
+
+1. **D1 の database_id を設定する**：`apps/api` で `pnpm wrangler d1 list` を実行し、
+   `kibuncinema` の ID を `apps/api/wrangler.jsonc` の `database_id` に書いて `main` に入れる
+2. **TMDB のトークンを本番に登録する**（`apps/api` で実行）
    ```sh
-   cd apps/api
    pnpm wrangler secret put TMDB_TOKEN
-   pnpm wrangler secret put BETTER_AUTH_SECRET
-   pnpm wrangler secret put GOOGLE_CLIENT_ID
-   pnpm wrangler secret put GOOGLE_CLIENT_SECRET
    ```
-3. Google の OAuth クライアントに、本番のリダイレクト URI（`<画面のURL>/api/auth/callback/google`）を追加する
-4. `pnpm db:migrate:remote`
-5. `pnpm run deploy`（API → 画面の順にデプロイ。画面は Service Binding で API を呼ぶため）
+   まだ一度もデプロイしていないときは「Worker を作るか」と聞かれるので、そのまま作る
+3. **Cloudflare の API トークンを作る**：ダッシュボード → 右上のアイコン →「プロフィール」→「API トークン」→「トークンを作成」。
+   「Cloudflare Workers を編集する」テンプレートを使い、権限に「アカウント → D1 → 編集」を追加する
+4. **GitHub にシークレットを登録する**：リポジトリの Settings → Secrets and variables → Actions → New repository secret
+   - `CLOUDFLARE_API_TOKEN`：3 で作ったトークン
+   - `CLOUDFLARE_ACCOUNT_ID`：ダッシュボードの「Workers & Pages」の画面右側などに表示されるアカウントID
+5. GitHub の Actions タブ →「Deploy」→「Run workflow」で手動実行するか、`main` にマージする
+
+デプロイが終わると、画面は `https://kibuncinema-web.<アカウントのサブドメイン>.workers.dev` で公開されます。
+
+## ログイン機能について
+
+今は Google ログインを止めていて、ログインなしで使えます。
+
+- お気に入りと「最近見た映画」は、そのブラウザの localStorage に保存します（`apps/web/src/lib/local-store.ts`）。
+  最近見た映画は30日で自動で消えます。別の端末やブラウザとは共有されません
+- ログイン関係のコード（Better Auth・お気に入りと履歴の API・R2 へのアイコン保存）は残してあります。
+  API はシークレットがそろっていないとき、ログインしていない扱いで動きます
+- 戻すときは、`apps/web/src/app/layout.tsx` の `<MyListLink />` を `<AuthButton />` に戻し、シークレットを登録します
 
 ## スキーマを変えるとき
 
