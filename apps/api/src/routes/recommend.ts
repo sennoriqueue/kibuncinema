@@ -3,11 +3,13 @@ import { createDb, history } from "@kibuncinema/db";
 import { answersSchema } from "@kibuncinema/shared";
 import { Hono } from "hono";
 import type { AppEnv } from "../env";
+import { rateLimit } from "../lib/rate-limit";
 import { recommend } from "../lib/tmdb";
 
 /** POST /api/recommend  質問の答え → 映画のリスト */
 export const recommendRoute = new Hono<AppEnv>().post(
   "/",
+  rateLimit("RECOMMEND_LIMITER"),
   zValidator("json", answersSchema, (result, c) => {
     if (!result.success) return c.json({ error: "答えの形式が正しくありません" }, 400);
   }),

@@ -20,6 +20,13 @@
     }
   ],
 
+  // 1つの IP アドレスからのリクエスト数の制限（いたずらの連打で、無料枠や TMDB の制限を使い切られないように）。
+  // Cloudflare の拠点ごとに数えるおおよその制限。period は 10 か 60（秒）
+  "ratelimits": [
+    { "name": "RECOMMEND_LIMITER", "namespace_id": "1001", "simple": { "limit": 20, "period": 60 } },
+    { "name": "MOVIE_LIMITER", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+  ],
+
   // R2（アイコン画像の保存先）はログイン機能を止めているあいだ使わないので外している。
   // 戻すときは R2 を有効にして `wrangler r2 bucket create kibuncinema-assets` を実行し、次の行を戻す
   // "r2_buckets": [{ "binding": "BUCKET", "bucket_name": "kibuncinema-assets" }],

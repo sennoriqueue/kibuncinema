@@ -6,13 +6,43 @@ import type {
   RecommendResponse,
   WatchProvider,
 } from "@kibuncinema/shared";
-import { eq } from "drizzle-orm";
+import { eq, lt } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import type { Bindings } from "../env";
 import { buildDiscoverParams } from "./tmdb-params";
 
 const TMDB_API = "https://api.themoviedb.org/3";
-const CACHE_SECONDS = 6 * 60 * 60;
+/** おすすめの検索結果のキャッシュ時間 */
+const DISCOVER_CACHE_SECONDS = 6 * 60 * 60;
+/** 映画の詳細のキャッシュ時間（内容はめったに変わらない） */
+const DETAIL_CACHE_SECONDS = 24 * 60 * 60;
+/** TMDB に問い合わせたときに、期限切れのキャッシュを掃除する割合 */
+const CLEANUP_RATE = 0.02;
+
+/**
+ * Worker のメモリ上の小さなキャッシュ。同じ Worker が続けて受けたリクエストなら D1 も読まずに返す。
+ * Worker は入れ替わるので消えてもよい。古いものから捨てる
+ */
+const MEMORY_MAX = 200;
+const memory = new Map<string, { body: string; expiresAt: number }>();
+
+function memoryGet(key: string, now: number): string | null {
+  const hit = memory.get(key);
+  if (!hit) return null;
+  if (hit.expiresAt <= now) {
+    memory.delete(key);
+    return null;
+  }
+  return hit.body;
+}
+
+function memorySet(key: string, body: string, expiresAt: number) {
+  if (memory.size >= MEMORY_MAX) {
+    const oldest = memory.keys().next().value;
+    if (oldest !== undefined) memory.delete(oldest);
+  }
+  memory.set(key, { body, expiresAt });
+}
 /** ランダムに選ぶページの上限（人気順なので、深すぎるとマイナーな作品ばかりになる） */
 const MAX_PAGE = 10;
 
@@ -20,14 +50,25 @@ const MAX_PAGE = 10;
  * TMDB の GET を呼ぶ。同じパス・条件の結果は D1 に数時間キャッシュする。
  * 見つからないとき（404）は 404 を返す。
  */
-async function tmdbGet<T>(env: Bindings, path: string, params: Record<string, string>): Promise<T> {
+async function tmdbGet<T>(
+  env: Bindings,
+  path: string,
+  params: Record<string, string>,
+  cacheSeconds: number,
+): Promise<T> {
   const qs = new URLSearchParams(Object.entries(params).sort(([a], [b]) => a.localeCompare(b)));
   const key = `${path}?${qs}`;
-  const db = createDb(env.DB);
   const now = Math.floor(Date.now() / 1000);
 
+  const inMemory = memoryGet(key, now);
+  if (inMemory) return JSON.parse(inMemory) as T;
+
+  const db = createDb(env.DB);
   const cached = await db.select().from(tmdbCache).where(eq(tmdbCache.key, key)).get();
-  if (cached && cached.expiresAt > now) return JSON.parse(cached.body) as T;
+  if (cached && cached.expiresAt > now) {
+    memorySet(key, cached.body, cached.expiresAt);
+    return JSON.parse(cached.body) as T;
+  }
 
   const res = await fetch(`${TMDB_API}${path}?${qs}`, {
     headers: { Authorization: `Bearer ${env.TMDB_TOKEN}`, accept: "application/json" },
@@ -38,11 +79,18 @@ async function tmdbGet<T>(env: Bindings, path: string, params: Record<string, st
     throw new HTTPException(502, { message: "映画データを取得できませんでした" });
   }
   const body = await res.text();
+  const expiresAt = now + cacheSeconds;
 
   await db
     .insert(tmdbCache)
-    .values({ key, body, expiresAt: now + CACHE_SECONDS })
-    .onConflictDoUpdate({ target: tmdbCache.key, set: { body, expiresAt: now + CACHE_SECONDS } });
+    .values({ key, body, expiresAt })
+    .onConflictDoUpdate({ target: tmdbCache.key, set: { body, expiresAt } });
+  memorySet(key, body, expiresAt);
+
+  // ときどき期限切れのキャッシュを消して、D1 の容量（無料枠 500MB）が少しずつ埋まるのを防ぐ
+  if (Math.random() < CLEANUP_RATE) {
+    await db.delete(tmdbCache).where(lt(tmdbCache.expiresAt, now)).run();
+  }
 
   return JSON.parse(body) as T;
 }
@@ -67,7 +115,7 @@ type DiscoverResponse = {
 };
 
 const discover = (env: Bindings, params: Record<string, string>) =>
-  tmdbGet<DiscoverResponse>(env, "/discover/movie", params);
+  tmdbGet<DiscoverResponse>(env, "/discover/movie", params, DISCOVER_CACHE_SECONDS);
 
 function toMovie(r: DiscoverResult): Movie {
   return {
@@ -162,7 +210,7 @@ export async function movieDetail(env: Bindings, id: number): Promise<MovieDetai
     language: "ja-JP",
     append_to_response: "credits,videos,watch/providers",
     include_video_language: "ja,en",
-  });
+  }, DETAIL_CACHE_SECONDS);
 
   const jp = d["watch/providers"]?.results?.JP;
   const flatrate = toProviders(jp?.flatrate ?? []);
