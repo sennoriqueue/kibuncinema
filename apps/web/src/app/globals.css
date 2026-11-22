@@ -69,6 +69,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ---------- ヘッダー ---------- */
 .site-header { padding-block: 22px; border-bottom: 1px solid rgba(52, 64, 94, 0.5); }
+/* スクロールしても上に固定する。うしろを通るカードや星空はぼかす。
+   z-index は内容（1〜2）より上、詳細ダイアログ（20）より下 */
+.site-header.site-header {
+  position: sticky; top: 0; z-index: 15;
+  background: rgba(7, 10, 18, 0.78);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+}
 .header-inner { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .logo {
   display: inline-flex; align-items: center; gap: 12px;
@@ -362,6 +369,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 /* 野外シネマ。プロフィール欄とフッターのあいだ */
 .drivein { display: block; width: 100%; height: 280px; margin-top: 8px; }
+/* 横幅が広く、内容の横に空きがある画面では、スクロールしても右上に漂い続ける */
+@media (min-width: 1280px) {
+  .astro-wrap { position: fixed; right: 16px; z-index: 2; }
+}
 @media (max-width: 560px) {
   .astro-wrap { top: 92px; right: 10px; }
   .astro { width: 62px; }
