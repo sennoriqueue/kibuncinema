@@ -18,6 +18,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251120.0",
     "drizzle-kit": "^0.31.7",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }

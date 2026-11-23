@@ -15,6 +15,6 @@
     "deploy": "pnpm --filter @kibuncinema/api run deploy && pnpm --filter @kibuncinema/web run deploy"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
